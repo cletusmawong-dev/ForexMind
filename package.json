@@ -1,0 +1,18 @@
+{
+  "name": "forexmind",
+  "version": "1.0.0",
+  "description": "ForexMind — Personal AI trading assistant. Real market data (Twelve Data), Anthropic Claude reasoning, economic-calendar news briefing, Zone MA (9/21) + Impulse MACD (34/9) strategy with live signals & TP/SL.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "setup": "node setup.js",
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.14"
+  }
+}
