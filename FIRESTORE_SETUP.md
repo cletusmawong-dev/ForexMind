@@ -22,6 +22,7 @@ You don't need to make these by hand — the app creates them on first write:
 - `signals` — every generated signal + its outcome (running / TP Hit / SL Hit / Expired)
 - `alerts` — the Alert Center feed
 - `journal` — your trade journal entries
+- `knowledge_base` — AI-discovered trading rules & lessons
 
 ---
 
@@ -36,7 +37,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{col}/{doc} {
-      allow read, write: if col in ['signals','alerts','journal'];
+      allow read, write: if col in ['signals','alerts','journal','knowledge_base'];
     }
   }
 }

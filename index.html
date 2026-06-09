@@ -82,7 +82,11 @@
   .wrap{max-width:1480px;margin:0 auto;padding:18px;display:grid;
         grid-template-columns:300px minmax(0,1fr) 380px;gap:18px;align-items:start}
   .ai-left, .ai-col{display:flex;flex-direction:column;gap:18px;min-width:0}
-
+  /* keep the chart in view while the taller side columns scroll (no empty gap) */
+  @media(min-width:1101px){
+    main[data-sec="chart"]{position:sticky;top:80px;align-self:start;
+      max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin}
+  }
   @media(max-width:1280px){.wrap{grid-template-columns:280px minmax(0,1fr) 340px}}
   @media(max-width:1100px){
     .wrap{grid-template-columns:1fr;gap:14px;padding:14px}
@@ -206,7 +210,8 @@
   .insights li{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:11px 13px;transition:border-color .2s,transform .2s}
   .insights li:hover{border-color:rgba(91,140,255,.3);transform:translateX(2px)}
   .insights .ic{font-size:16px;line-height:1.3}
-  .chat{display:flex;flex-direction:column;height:480px}
+  .chat{display:flex;flex-direction:column;height:min(620px,72vh)}
+  @media(max-width:1100px){.card.chat.active{height:calc(100vh - 150px)}}
   .msgs{flex:1;overflow-y:auto;padding:14px 15px;display:flex;flex-direction:column;gap:11px}
   .msg{max-width:90%;padding:11px 14px;border-radius:16px;font-size:13.5px;white-space:pre-wrap;word-wrap:break-word;line-height:1.55;animation:msgIn .3s ease}
   @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -460,6 +465,18 @@
   .hbars .hb .vv{width:54px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
   .astat .l{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
   .astat .n{font-size:17px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+  /* AI Brain */
+  .brain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}
+  @media(max-width:560px){.brain-grid{grid-template-columns:repeat(2,1fr)}}
+  .bstat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;text-align:center}
+  .bstat .l{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2)}
+  .bstat .n{font-size:18px;font-weight:800;margin-top:3px;font-family:'Space Grotesk'}
+  .lesson{display:flex;gap:9px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:11px;padding:9px 11px;margin-bottom:7px}
+  .lesson.high{border-left-color:var(--green)}
+  .lesson .lt{font-size:12px;font-weight:700}
+  .lesson .ld{font-size:11px;color:var(--muted);margin-top:2px}
+  .lesson .le{font-size:9px;color:var(--muted2);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+  .brain-h{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);font-weight:700;margin:6px 0 8px}
   .abar{grid-column:1/-1;height:10px;border-radius:6px;background:rgba(255,95,122,.25);overflow:hidden;margin-top:2px}
   .abar>i{display:block;height:100%;background:linear-gradient(90deg,#34e3a4,#3dd7e0)}
 
@@ -487,9 +504,10 @@
     .tabbar button.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:26px;height:3px;border-radius:3px;background:var(--grad)}
     .sec{display:none}
     .sec.active{display:block}
-    .ai-col{display:contents}
-    .ai-col>.card{display:none}
-    .ai-col>.card.active{display:flex}
+    .ai-left,.ai-col{display:contents}
+    .ai-left>.card,.ai-col>.card{display:none}
+    .ai-left>.card.active,.ai-col>.card.active{display:block}
+    .card.chat.active{display:flex}
     .big-px{font-size:30px}
   }
   ::-webkit-scrollbar{width:8px;height:8px}
@@ -542,11 +560,11 @@
 <div class="wrap">
   <!-- LEFT -->
   <aside class="ai-left">
-    <div class="card sec" data-sec="watch">
+    <div class="card sec" data-sec="markets">
       <h2>Watchlist</h2>
       <div id="watchlist"></div>
     </div>
-    <div class="card sec" data-sec="history">
+    <div class="card sec" data-sec="signals">
       <h2>Signal History <span class="rr" id="histCount"></span></h2>
       <div class="histbar">
         <input id="histSearch" placeholder="Search pair…" autocomplete="off"/>
@@ -568,21 +586,21 @@
       </div>
       <div id="history"><div class="empty">No signals logged yet. They appear here automatically when a setup aligns.</div></div>
     </div>
-    <div class="card sec" data-sec="alerts">
+    <div class="card sec" data-sec="signals">
       <h2>Alert Center <span class="rr" id="alertCount"></span>
         <button class="btn" id="clearAlerts" style="padding:4px 9px;font-size:11px">Clear</button>
       </h2>
       <div id="alerts"><div class="empty">No alerts yet.</div></div>
     </div>
-    <div class="card sec" data-sec="watch">
+    <div class="card sec" data-sec="markets">
       <h2>Multi-Timeframe Trend</h2>
       <div class="mtf" id="mtf"><div class="empty">Analyzing timeframes…</div></div>
     </div>
-    <div class="card sec" data-sec="watch">
+    <div class="card sec" data-sec="markets">
       <h2>Market Sessions <span id="sessClock" class="rr"></span></h2>
       <div class="sess" id="sessions"></div>
     </div>
-    <div class="card sec" data-sec="news">
+    <div class="card sec" data-sec="markets">
       <h2>Today's Events <span id="calBadge" class="rr"></span></h2>
       <div id="calendar"><div class="empty">Loading economic calendar…</div></div>
     </div>
@@ -697,7 +715,7 @@
 
 
 
-    <div class="card sec" data-sec="portfolio">
+    <div class="card sec" data-sec="folio">
       <h2>Risk / Position Calculator</h2>
       <div class="calc">
         <div class="grid2">
@@ -718,7 +736,7 @@
       </div>
     </div>
 
-    <div class="card sec" data-sec="portfolio">
+    <div class="card sec" data-sec="folio">
       <h2>Portfolio (Paper)</h2>
       <div class="pad">
         <div class="pf-add">
@@ -736,7 +754,24 @@
       <div class="pf-foot"><span>Total P/L</span><span id="pfTotal">0.00%</span></div>
     </div>
 
-    <div class="card sec" data-sec="analytics">
+    <div class="card sec" data-sec="stats">
+      <h2>🧠 AI Brain</h2>
+      <div class="pad" id="brainBox"><div class="empty">The brain learns as signals close. Stats &amp; discovered lessons appear here.</div></div>
+    </div>
+
+    <div class="card sec" data-sec="stats">
+      <h2>💰 Account Simulator
+        <span style="display:flex;gap:6px;align-items:center">
+          <input id="simStart" type="number" value="50" title="Starting balance ($)" style="width:62px;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:5px 7px;border-radius:8px;font-size:11px"/>
+          <select id="simRisk" title="Risk per trade" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:5px;border-radius:8px;font-size:11px">
+            <option value="1">1%</option><option value="2" selected>2%</option><option value="3">3%</option><option value="5">5%</option>
+          </select>
+        </span>
+      </h2>
+      <div class="pad" id="simBox"><div class="empty">Add closed trades to see how $50 would grow.</div></div>
+    </div>
+
+    <div class="card sec" data-sec="stats">
       <h2>Daily Report
         <span style="display:flex;gap:6px">
           <button class="btn" id="emailReport" style="padding:4px 9px;font-size:11px" title="Email this report">📧</button>
@@ -746,12 +781,12 @@
       <div class="pad brief" id="dailyReport">Generating today's report…</div>
     </div>
 
-    <div class="card sec" data-sec="analytics">
+    <div class="card sec" data-sec="stats">
       <h2>Performance Analytics</h2>
       <div class="pad"><div class="analytics" id="analytics"><div class="empty">Stats appear once signals close.</div></div></div>
     </div>
 
-    <div class="card sec" data-sec="journal">
+    <div class="card sec" data-sec="stats">
       <h2>Trade Journal</h2>
       <div class="pad">
         <div class="jrnl-add">
@@ -776,11 +811,11 @@
 
 <nav class="tabbar" id="tabbar">
   <button data-tab="chart" class="active"><span class="i">📈</span>Chart</button>
-  <button data-tab="history"><span class="i">🗂️</span>History</button>
+  <button data-tab="markets"><span class="i">⭐</span>Markets</button>
+  <button data-tab="signals"><span class="i">🗂️</span>Signals</button>
   <button data-tab="ai"><span class="i">🤖</span>AI</button>
-  <button data-tab="analytics"><span class="i">📊</span>Stats</button>
-  <button data-tab="journal"><span class="i">📓</span>Journal</button>
-  <button data-tab="alerts"><span class="i">🔔</span>Alerts</button>
+  <button data-tab="stats"><span class="i">📊</span>Stats</button>
+  <button data-tab="folio"><span class="i">💼</span>Folio</button>
 </nav>
 
 <div class="modal" id="briefModal">
@@ -1064,6 +1099,26 @@ function smma(a,n){const o=[];let p=null;for(let i=0;i<a.length;i++){if(i<n-1){o
 function zlema(a,n){const lag=Math.floor((n-1)/2),d=a.map((v,i)=>i>=lag?v+(v-a[i-lag]):v);return ema(d,n);}
 function rsi(a,n=14){if(a.length<n+1)return 50;let g=0,l=0;for(let i=a.length-n;i<a.length;i++){const c=a[i]-a[i-1];c>=0?g+=c:l-=c;}if(l===0)return 100;return 100-100/(1+(g/n)/(l/n));}
 function atr(cs,n=14){let s=0,c=0;for(let i=Math.max(1,cs.length-n);i<cs.length;i++){const tr=Math.max(cs[i].h-cs[i].l,Math.abs(cs[i].h-cs[i-1].c),Math.abs(cs[i].l-cs[i-1].c));s+=tr;c++;}return c?s/c:(cs[cs.length-1].h-cs[cs.length-1].l);}
+/* SuperTrend (LuxAlgo-style): ATR length 10, factor 3 */
+function superTrend(cs,len=10,fac=3){
+  const n=cs.length, out={line:new Array(n).fill(null),dir:new Array(n).fill(null)};
+  if(n<len+1)return out;
+  // Wilder ATR series
+  const atrA=new Array(n).fill(null);let prev=null;
+  for(let i=1;i<n;i++){const tr=Math.max(cs[i].h-cs[i].l,Math.abs(cs[i].h-cs[i-1].c),Math.abs(cs[i].l-cs[i-1].c));
+    prev = prev==null ? tr : (prev*(len-1)+tr)/len; if(i>=len)atrA[i]=prev;}
+  let upper=null,lower=null,dir=1;
+  for(let i=len;i<n;i++){
+    const hl2=(cs[i].h+cs[i].l)/2, a=atrA[i]||0;
+    let bUp=hl2+fac*a, bLo=hl2-fac*a;
+    upper = (upper==null||bUp<upper||cs[i-1].c>upper) ? bUp : upper;
+    lower = (lower==null||bLo>lower||cs[i-1].c<lower) ? bLo : lower;
+    if(dir===1 && cs[i].c<lower) dir=-1;
+    else if(dir===-1 && cs[i].c>upper) dir=1;
+    out.dir[i]=dir; out.line[i]= dir===1?lower:upper;
+  }
+  return out;
+}
 function impulseMACD(cs,length=34,signal=9){
   const high=cs.map(c=>c.h),low=cs.map(c=>c.l),src=cs.map(c=>(c.h+c.l+c.c)/3);
   const hi=smma(high,length),lo=smma(low,length),mi=zlema(src,length);
@@ -1082,6 +1137,9 @@ function analyze(cs){
   const crossUp=m.sh[i]>0&&m.sh[i-1]<=0, crossDn=m.sh[i]<0&&m.sh[i-1]>=0;
   const r=rsi(closes), chg=(last.c-cs[i-1].c)/cs[i-1].c*100, a14=atr(cs);
   const vol=a14/last.c*100;
+  // SuperTrend (LuxAlgo 10/3) — used as a soft trend filter
+  const st=superTrend(cs,10,3); const stDir=st.dir[i]; const stLine=st.line[i];
+  const stUp=stDir===1, stFlip = i>0 && st.dir[i]!=null && st.dir[i-1]!=null && st.dir[i]!==st.dir[i-1];
   // market volume: current vs 20-bar average
   const vols=cs.map(c=>c.v||0);let vsum=0,vc=0;for(let k=Math.max(0,vols.length-20);k<vols.length;k++){vsum+=vols[k];vc++;}
   const volAvg=vc?vsum/vc:0, volNow=vols[vols.length-1]||0, volRatio=volAvg?volNow/volAvg:1;
@@ -1175,7 +1233,7 @@ function analyze(cs){
     rsi:r,zoneUp,macdUp,crossUp,crossDn,action,cls,aligned,conf,reasons,hi,lo,vol,atr:a14,plan,
     volNow,volAvg,volRatio,factors,trendLabel,momLabel,
     ema9Slope,ema21Slope,slopeStrength,regime,atrCat,atrPct,structure,structAgree,
-    distRes,distSup,srRisk,series:{ma9,ma21,m}};
+    distRes,distSup,srRisk,stUp,stLine,stFlip,series:{ma9,ma21,m,st}};
 }
 
 /* ============================================================
@@ -1195,7 +1253,7 @@ const LEARN={pair:{},session:{},tf:{},conf:{},atr:{},regime:{},ready:false};
 function rebuildLearning(){
   const buckets={pair:{},session:{},tf:{},conf:{},atr:{},regime:{}};
   const add=(grp,k,win)=>{if(k==null)return;(buckets[grp][k]=buckets[grp][k]||{w:0,t:0}),buckets[grp][k].t++;if(win)buckets[grp][k].w++;};
-  SIGNALS.filter(s=>s.status==='closed'&&s.result!=='Expired').forEach(s=>{
+  SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit')).forEach(s=>{
     const win=s.result==='TP Hit';
     add('pair',s.pair,win);add('session',s.session||s.sess,win);add('tf',s.timeframe,win);
     add('conf',s.confidence>=90?'90+':s.confidence>=80?'80-89':s.confidence>=70?'70-79':'<70',win);
@@ -1211,6 +1269,132 @@ function learnAdj(grp,k){
   return Math.round((wr-0.5)*16);        // ±8 max
 }
 
+/* ----- SIMILAR SETUP DETECTION -----
+   Search closed history for signals with matching conditions and return
+   how that setup-type has performed (win rate, avg RR, count). */
+function findSimilar(a,pairSym,tfLabel){
+  const closed=SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit'));
+  const want=a.action;
+  const sim=closed.filter(s=>{
+    if(s.action!==want)return false;
+    let score=0;
+    if(s.pair===pairSym)score++;
+    if(s.timeframe===tfLabel)score++;
+    if(s.regime===a.regime)score++;
+    if((s.zone==='green')===(a.zoneUp===true))score++;
+    if(s.atrCat===a.atrCat)score++;
+    if(s.session===((activeSessionInfo().open[0])||'Off-session'))score++;
+    return score>=4;   // at least 4 matching conditions = "similar"
+  });
+  if(!sim.length)return {count:0};
+  const wins=sim.filter(s=>s.result==='TP Hit').length;
+  const wr=Math.round(wins/sim.length*100);
+  const rrs=sim.map(s=>{const r=Math.abs(s.entry-(s.slOrig||s.sl)),w=Math.abs(s.tp1-s.entry);return r?w/r:0;}).filter(x=>x>0);
+  const avgRR=rrs.length?(rrs.reduce((x,y)=>x+y,0)/rrs.length):0;
+  const durs=sim.filter(s=>s.durationMin).map(s=>s.durationMin);
+  const avgDur=durs.length?Math.round(durs.reduce((x,y)=>x+y,0)/durs.length):null;
+  return {count:sim.length,wr,avgRR:+avgRR.toFixed(2),avgDur,wins};
+}
+
+/* ----- PROFIT FACTOR / EXPECTANCY (R-based) ----- */
+function profitMetrics(){
+  const closed=SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit'));
+  let grossWin=0,grossLoss=0;
+  closed.forEach(s=>{const r=Math.abs(s.entry-(s.slOrig||s.sl))||1e-9,w=Math.abs(s.tp1-s.entry);const rr=w/r;
+    if(s.result==='TP Hit')grossWin+=rr; else grossLoss+=1;});
+  const wr=closed.length?closed.filter(s=>s.result==='TP Hit').length/closed.length:0;
+  const avgRR=closed.length?closed.map(s=>{const r=Math.abs(s.entry-(s.slOrig||s.sl))||1e-9;return Math.abs(s.tp1-s.entry)/r;}).reduce((x,y)=>x+y,0)/closed.length:0;
+  const pf=grossLoss>0?grossWin/grossLoss:(grossWin>0?Infinity:0);
+  const expectancy=wr*avgRR-(1-wr);    // expected R per trade
+  return {pf,expectancy,grossWin,grossLoss,wr:Math.round(wr*100),avgRR:+avgRR.toFixed(2),n:closed.length};
+}
+
+/* ============================================================
+   KNOWLEDGE BASE + AUTO LESSON DISCOVERY
+   The AI writes its own rules from observed performance and
+   stores them permanently in Firestore (collection: knowledge_base).
+   ============================================================ */
+let KNOWLEDGE=[];
+/* ----- FOUNDATIONAL TRADING KNOWLEDGE -----
+   Seeded once so the AI starts with established trading wisdom (informed
+   priors) instead of a blank slate. Real discovered lessons appear
+   alongside these and can confirm/override them over time. */
+const FOUNDATION=[
+  {title:'Trade with the higher-timeframe trend',description:'Aligning entries with the H4 and D1 trend significantly improves win rate. Counter-trend trades have lower odds.',category:'foundation',importance:'high'},
+  {title:'Risk-reward beats win rate',description:'A 38% win rate with 3:1 reward-to-risk is more profitable than 65% with poor RR. Optimise for expectancy and profit factor, not win rate alone.',category:'foundation',importance:'high'},
+  {title:'Risk only 1–2% per trade',description:'Keeping risk small per trade protects capital through losing streaks and lets winners compound. Survival first.',category:'foundation',importance:'high'},
+  {title:'Avoid trading into resistance/support',description:'Buying right into resistance or selling into support gives poor reward-to-risk. Prefer setups with a clear path to target.',category:'foundation',importance:'high'},
+  {title:'Strong trends need strong momentum',description:'Wide EMA separation and a steep EMA slope indicate a healthy trend. Flat EMAs mean a weak/ranging market — reduce size or skip.',category:'foundation',importance:'medium'},
+  {title:'Volatility (ATR) must be healthy',description:'Very low ATR often means chop and false breakouts. Adequate ATR is needed for price to reach the target.',category:'foundation',importance:'medium'},
+  {title:'London & New York sessions are best',description:'The London and London–New York overlap have the highest liquidity and cleanest moves. The Asian session tends to range.',category:'foundation',importance:'medium'},
+  {title:'Confirm with market structure',description:'Buy in markets making higher highs and higher lows; sell in lower highs and lower lows. Trade with structure, not against it.',category:'foundation',importance:'high'},
+  {title:'Avoid chaotic / news-driven markets',description:'Extreme volatility and erratic candles (often around high-impact news) produce unreliable signals. Reduce confidence heavily.',category:'foundation',importance:'medium'},
+  {title:'Don\'t trade right before high-impact news',description:'CPI, NFP and FOMC can spike price in either direction. Wait for the dust to settle before entering.',category:'foundation',importance:'medium'},
+  {title:'Move stop to break-even when in profit',description:'Once a trade runs ~halfway to target, protecting it at break-even removes risk and lets winners run safely.',category:'foundation',importance:'medium'},
+  {title:'Volume confirms moves',description:'Breakouts and trends on above-average volume are more reliable. Thin volume increases the chance of fakeouts.',category:'foundation',importance:'low'},
+  {title:'Be patient — quality over quantity',description:'Fewer high-confidence, aligned setups outperform many low-quality trades. No trade is also a position.',category:'foundation',importance:'medium'},
+  {title:'Let the data refine these rules',description:'These are starting principles. As ForexMind closes more signals, it confirms, refines, or overrides them with your own real results.',category:'foundation',importance:'low'}
+];
+async function seedFoundation(){
+  // add any foundation rule that isn't already present (by title)
+  for(const f of FOUNDATION){
+    if(!KNOWLEDGE.find(k=>k.title===f.title)){
+      const rec={...f,confidence:75,evidence:0,seeded:true,createdAt:Date.now(),updatedAt:Date.now()};
+      if(window.FB)try{rec.id=await window.FB.add('knowledge_base',rec);}catch(e){}
+      KNOWLEDGE.push(rec);
+    }
+  }
+  renderBrain();
+}
+async function loadKnowledge(){ if(window.FB){ try{KNOWLEDGE=await window.FB.list('knowledge_base',{order:'createdAt',dir:'desc',max:200});}catch(e){} } await seedFoundation(); renderBrain(); }
+async function upsertLesson(lesson){
+  // dedupe by title: update evidence/confidence if it already exists
+  const existing=KNOWLEDGE.find(k=>k.title===lesson.title);
+  if(existing){
+    existing.description=lesson.description;existing.confidence=lesson.confidence;existing.evidence=lesson.evidence;existing.updatedAt=Date.now();
+    if(window.FB&&existing.id)try{await window.FB.update('knowledge_base',existing.id,{description:lesson.description,confidence:lesson.confidence,evidence:lesson.evidence,updatedAt:existing.updatedAt});}catch(e){}
+  }else{
+    const rec={...lesson,createdAt:Date.now(),updatedAt:Date.now()};
+    if(window.FB)try{rec.id=await window.FB.add('knowledge_base',rec);}catch(e){}
+    KNOWLEDGE.unshift(rec);
+  }
+}
+// derive lessons from learning buckets (min sample sizes keep them trustworthy)
+let _lastDiscover=0;
+async function discoverLessons(){
+  if(!LEARN.ready)return;
+  if(Date.now()-_lastDiscover<60000)return;   // throttle: at most once/min
+  _lastDiscover=Date.now();
+  const mk=(grp,label,catWord,minN=12)=>{
+    for(const [k,v] of Object.entries(LEARN[grp]||{})){
+      if(v.t<minN)continue;const wr=Math.round(v.w/v.t*100);
+      if(wr>=62||wr<=38){
+        const good=wr>=62;
+        upsertLesson({
+          title:`${label}: ${k}`,
+          description:`${k} ${catWord} ${good?'performs well':'underperforms'} — ${wr}% win rate across ${v.t} closed signals.`,
+          category:grp, importance: Math.abs(wr-50)>=20?'high':'medium',
+          confidence:Math.min(95,50+v.t), evidence:v.t
+        });
+      }
+    }
+  };
+  mk('pair','Pair','signals',12);
+  mk('session','Session','session trades',12);
+  mk('tf','Timeframe','signals',12);
+  mk('regime','Regime','conditions',12);
+  mk('atr','ATR range','volatility',12);
+  mk('conf','Confidence band','signals',12);
+  // a couple of universal seeded rules (only added once)
+  const pm=profitMetrics();
+  if(pm.n>=20){
+    upsertLesson({title:'Risk-reward matters more than win rate',
+      description:`Current profit factor is ${pm.pf===Infinity?'∞':pm.pf.toFixed(2)} with ${pm.wr}% win rate and ${pm.avgRR} avg RR. Expectancy ${pm.expectancy.toFixed(2)}R/trade.`,
+      category:'performance',importance:'high',confidence:80,evidence:pm.n});
+  }
+  renderBrain();
+}
+
 /* ----- enrichSignal: apply soft modifiers + build explanation -----
    Entry rule is unchanged (MACD+EMA align). HTF/volume/regime/structure/
    S/R and historical performance only ADJUST confidence (never block). */
@@ -1221,6 +1405,12 @@ function enrichSignal(p,a){
   why.push([true,`Impulse MACD ${a.macdUp?'bullish':'bearish'}`]);
   why.push([true,`EMA 9 ${a.zoneUp?'above':'below'} EMA 21`]);
   why.push([a.slopeStrength>0.3,`${a.slopeStrength>0.3?'Strong':'Weak'} EMA slope`]);
+  // SuperTrend (LuxAlgo 10/3) filter — strong agreement boost, disagreement penalty
+  const stWant = a.action==='BUY'? a.stUp===true : a.stUp===false;
+  if(a.stUp!=null){
+    if(stWant){conf+=8;why.push([true,'SuperTrend confirms'+(a.stFlip?' (fresh flip)':'')]);}
+    else{conf-=12;why.push([false,'SuperTrend disagrees']);}
+  }
   // higher timeframe confirmation (soft)
   const h4=htfBias(p,TFS.find(t=>t.id==='4H')), d1=htfBias(p,TFS.find(t=>t.id==='1D'));
   if(h4===want){conf+=7;why.push([true,'H4 trend confirms']);}
@@ -1254,12 +1444,21 @@ function enrichSignal(p,a){
     if(adj>=4)why.push([true,'Pair historically strong']);
     else if(adj<=-4)why.push([false,'Pair historically weak']);
   }
+  // similar-setup detection: compare to matching historical signals
+  const sim=findSimilar(a,a._pair,a._tf);
+  a.similar=sim;
+  if(sim.count>=8){
+    if(sim.wr>=60){conf+=8;why.push([true,`Similar setups won ${sim.wr}% (${sim.count} samples)`]);}
+    else if(sim.wr<=40){conf-=8;why.push([false,`Similar setups only won ${sim.wr}% (${sim.count})`]);}
+    else why.push([true,`Similar setups: ${sim.wr}% over ${sim.count}`]);
+  }
   conf=Math.max(1,Math.min(99,Math.round(conf)));
   a.conf=conf;
   a.h4=h4;a.d1=d1;
   a.why=why;
   a.riskLevel = conf>=85?'Low' : conf>=70?'Moderate' : 'High';
   a.tier = conf>=90?'Elite' : conf>=80?'Strong' : conf>=70?'Moderate' : 'Weak';
+  a.decision = conf>=80?'High-probability setup' : conf>=70?'Tradeable setup' : 'Low-quality — caution';
   return a;
 }
 
@@ -1273,10 +1472,12 @@ const OVERLAYS={
   fvg:JSON.parse(localStorage.getItem('fm_ov_fvg')??'true'),
   sd:JSON.parse(localStorage.getItem('fm_ov_sd')??'true'),
   liq:JSON.parse(localStorage.getItem('fm_ov_liq')??'false'),
-  ma:JSON.parse(localStorage.getItem('fm_ov_ma')??'true')
+  ma:JSON.parse(localStorage.getItem('fm_ov_ma')??'true'),
+  st:JSON.parse(localStorage.getItem('fm_ov_st')??'true')
 };
 const OVDEFS=[
   {id:'ma',label:'MA Zone 9/21',color:'#2dd4bf'},
+  {id:'st',label:'SuperTrend',color:'#22c55e'},
   {id:'fvg',label:'Fair Value Gaps',color:'#a78bfa'},
   {id:'sd',label:'Supply / Demand',color:'#5b8cff'},
   {id:'liq',label:'Liquidity',color:'#ffce4a'}
@@ -1519,6 +1720,11 @@ function drawChart(cs,a){
   if(OVERLAYS.liq){for(const z of findLiquidity(cs)){const y=py(z.price);x.setLineDash([2,3]);x.strokeStyle=z.type==='sellside'?'rgba(255,206,74,.7)':'rgba(255,206,74,.55)';x.lineWidth=1;x.beginPath();x.moveTo(px(z.i)-cw,y);x.lineTo(right,y);x.stroke();x.setLineDash([]);x.fillStyle='#ffce4a';x.font='8px Inter';x.fillText(z.type==='sellside'?'SSL':'BSL',right-22,y-2);}}
   const line=(arr,color)=>{x.beginPath();let f=true;for(let i=0;i<n;i++){if(arr[i]==null)continue;const X=px(i),Y=py(arr[i]);f?(x.moveTo(X,Y),f=false):x.lineTo(X,Y);}x.strokeStyle=color;x.lineWidth=1.8;x.stroke();};
   if(OVERLAYS.ma){line(m21,'#ffb43b');line(m9,'#2dd4bf');}
+  // SuperTrend line (green up / red down), segmented by direction
+  if(OVERLAYS.st&&a.series.st){const sl=a.series.st.line,sd=a.series.st.dir;
+    for(let k=Math.max(1,vs);k<ve;k++){if(sl[k]==null||sl[k-1]==null)continue;
+      x.beginPath();x.moveTo(px(k-1),py(sl[k-1]));x.lineTo(px(k),py(sl[k]));
+      x.strokeStyle=sd[k]===1?'#22c55e':'#ff5a72';x.lineWidth=2;x.stroke();}}
   if(a.plan){const dash=(v,color,lbl)=>{const y=py(v);x.setLineDash([5,4]);x.strokeStyle=color;x.lineWidth=1;x.beginPath();x.moveTo(pad.l,y);x.lineTo(W-pad.r,y);x.stroke();x.setLineDash([]);x.fillStyle=color;x.font='9px Inter';x.fillText(lbl,pad.l+2,y-2);};
     if(a.plan.tp2<=max&&a.plan.tp2>=min)dash(a.plan.tp2,'#2ee6a0','TP2');
     dash(a.plan.tp1,'#2ee6a0','TP1');dash(a.plan.sl,'#ff5a72','SL');}
@@ -1617,7 +1823,8 @@ function renderWhy(p,a){
         <span class="pill" style="background:${riskColor}22;color:${riskColor}">Risk: ${a.riskLevel||'—'}</span>
       </span></div>
     <div class="wchecks">${checklist}</div>
-    <div class="wsum"><b>Regime:</b> ${a.regime} · <b>Structure:</b> ${a.structure} · <b>H4:</b> ${a.h4||'n/a'} · <b>D1:</b> ${a.d1||'n/a'}</div>`;
+    ${a.similar&&a.similar.count?`<div class="wsum" style="border-bottom:1px solid var(--line)">📊 <b>${a.similar.count}</b> similar past setups · <b>${a.similar.wr}%</b> win · avg RR <b>${a.similar.avgRR}</b></div>`:''}
+    <div class="wsum"><b>Decision:</b> ${a.decision||'—'} · <b>Regime:</b> ${a.regime} · <b>Structure:</b> ${a.structure} · <b>H4:</b> ${a.h4||'n/a'} · <b>D1:</b> ${a.d1||'n/a'}</div>`;
 }
 function renderPatterns(cs){
   const pats=detectPatterns(cs);
@@ -1700,15 +1907,39 @@ async function trackOutcomes(){
     const adv = s.action==='BUY'? (s.entry-lo) : (hi-s.entry);
     s.mfe=Math.max(s.mfe||0, Math.max(0,fav));
     s.mae=Math.max(s.mae||0, Math.max(0,adv));
+    /* ----- Trailing / break-even stop -----
+       Once price travels TRAIL_TRIGGER of the way to TP, pull the stop up to
+       break-even (entry) so a winner can't become a loser; then trail it
+       behind price by the original risk distance. */
+    const risk0=Math.abs(s.entry-(s.slOrig??s.sl));
+    if(s.slOrig==null)s.slOrig=s.sl;            // remember original SL once
+    const tpDist=Math.abs(s.tp1-s.entry);
+    const progress = s.action==='BUY' ? (hi-s.entry)/tpDist : (s.entry-lo)/tpDist;
+    const TRAIL_TRIGGER=0.5;                      // move to BE at 50% to TP
+    let slMoved=false;
+    if(progress>=TRAIL_TRIGGER && risk0>0){
+      if(!s.beSet){ s.sl = s.action==='BUY'? s.entry+risk0*0.02 : s.entry-risk0*0.02; s.beSet=true; slMoved=true; } // ~break-even (tiny buffer)
+      // then trail behind the best price by one risk unit
+      const trail = s.action==='BUY' ? hi-risk0 : lo+risk0;
+      if(s.action==='BUY' && trail>s.sl){ s.sl=trail; slMoved=true; }
+      if(s.action==='SELL' && trail<s.sl){ s.sl=trail; slMoved=true; }
+    }
+    if(slMoved){ s.sl=+s.sl.toFixed(s.decimals||4); try{await window.FB.update('signals',s.id,{sl:s.sl,beSet:!!s.beSet,slOrig:s.slOrig});}catch(e){}
+      if(s.beSet&&progress>=TRAIL_TRIGGER&&!s._beAlerted){s._beAlerted=true;pushAlert('update',`🛡️ Break-even set · ${s.pair} ${s.timeframe}`,`Stop moved to ~entry (${s.sl}) — trade is now risk-free`,'');} }
+
     let res=null;
-    if(s.action==='BUY'){ if(hi>=s.tp1)res='TP Hit'; else if(lo<=s.sl)res='SL Hit'; }
-    else{ if(lo<=s.tp1)res='TP Hit'; else if(hi>=s.sl)res='SL Hit'; }
+    if(s.action==='BUY'){ if(hi>=s.tp1)res='TP Hit'; else if(lo<=s.sl)res = s.beSet?'BE/Trail':'SL Hit'; }
+    else{ if(lo<=s.tp1)res='TP Hit'; else if(hi>=s.sl)res = s.beSet?'BE/Trail':'SL Hit'; }
     // expire after 3 days if still running
     if(!res && Date.now()-s.ts>3*24*3600*1000)res='Expired';
     if(res){
       s.status='closed';s.result=res;s.closedAt=Date.now();
       s.durationMin=Math.round((s.closedAt-s.ts)/60000);
-      const move = res==='TP Hit'? Math.abs(s.tp1-s.entry) : res==='SL Hit'? -Math.abs(s.entry-s.sl) : 0;
+      // P/L uses the (possibly trailed) stop for BE/Trail exits
+      const move = res==='TP Hit'? Math.abs(s.tp1-s.entry)
+                 : res==='SL Hit'? -Math.abs(s.entry-s.slOrig)
+                 : res==='BE/Trail'? (s.action==='BUY'? (s.sl-s.entry) : (s.entry-s.sl))
+                 : 0;
       s.pips = +(move/(s.symKey==='XAU_USD'?0.1:(s.symKey.includes('JPY')?0.01:0.0001))).toFixed(1);
       s.pctMove = +((move/s.entry)*100).toFixed(3);
       await window.FB.update('signals',s.id,{status:'closed',result:res,closedAt:s.closedAt,
@@ -1874,18 +2105,26 @@ $('pfAdd').onclick=()=>{const entry=parseFloat($('pfEntry').value);if(!entry){$(
 
 /* ---------- Chat ---------- */
 function pushMsg(txt,who,raw){const m=document.createElement('div');m.className='msg '+who;m.innerHTML=raw?txt:mdToHtml(txt);$('msgs').appendChild(m);$('msgs').scrollTop=$('msgs').scrollHeight;return m;}
+const CHAT_HISTORY=[];   // conversational memory ("threading") so the AI can follow up
 async function send(){
   const v=$('chatInput').value.trim();if(!v)return;
   pushMsg(v.replace(/</g,'&lt;'),'user',true);$('chatInput').value='';
   const typing=pushMsg('<div class="typing"><i></i><i></i><i></i></div>','bot',true);
   const context={focus:sym(current),timeframe:tf.label,snapshot:buildSnapshot(),
     sessions:activeSessionInfo(),
+    knowledgeRules:KNOWLEDGE.slice(0,12).map(k=>k.title),
+    discoveredLessons:KNOWLEDGE.filter(k=>!k.seeded).slice(0,6).map(k=>k.description),
     highImpactUSDevents:CALENDAR&&CALENDAR.highImpactUSD?CALENDAR.highImpactUSD:[]};
   let text;
-  if(SERVER.hasAI){const j=await api('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:v,context})});text=j&&j.live?j.text:localChat(v);}
-  else text=localChat(v);
+  if(SERVER.hasAI){
+    const j=await api('/api/chat',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({message:v,context,history:CHAT_HISTORY.slice(-6)})});
+    text=j&&j.live?j.text:localChat(v);
+  } else text=localChat(v);
   typing.remove();
   const m=pushMsg(text,'bot');
+  CHAT_HISTORY.push({role:'user',text:v},{role:'assistant',text});
+  if(CHAT_HISTORY.length>20)CHAT_HISTORY.splice(0,CHAT_HISTORY.length-20);
   if(VOICE.on)speak(text,m);
 }
 // lightweight local knowledge base (used only when no AI key is set)
@@ -1954,8 +2193,9 @@ $('tfBar').onclick=e=>{if(e.target.tagName!=='BUTTON')return;tf=TFS.find(t=>t.id
 function switchTab(tab){
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('active',s.dataset.sec===tab));
-  document.querySelectorAll('.ai-col>.card').forEach(c=>c.classList.toggle('active',c.dataset.sec===tab));
-  if(tab==='chart'){const cs=cache[key(current)+'_'+tf.id];if(cs){const a=analyze(cs);drawChart(cs,a);drawVolume(cs);drawMACD(cs,a);}}
+  // scroll back to top when switching tabs on mobile
+  if(window.innerWidth<=1100)window.scrollTo({top:0,behavior:'smooth'});
+  if(tab==='chart'){const cs=cache[key(current)+'_'+tf.id];if(cs){const a=analyze(cs);drawChart(cs,a);drawVolume(cs);drawMACD(cs,a);redrawOverlay&&redrawOverlay();}}
 }
 $('tabbar').onclick=e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.tab);};
 
@@ -2202,18 +2442,18 @@ function renderTiles(){
   const mkt=si.open.length?(si.overlap==='London-NewYork'?'London × NY':si.open[0]+(si.open[1]?' + '+si.open[1]:'')):'Closed';
   // best pair today (by closed win rate, fallback by count)
   const byPair={};
-  SIGNALS.filter(s=>s.status==='closed'&&s.result!=='Expired').forEach(s=>{(byPair[s.pair]=byPair[s.pair]||{w:0,t:0}),byPair[s.pair].t++;if(s.result==='TP Hit')byPair[s.pair].w++;});
+  SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit')).forEach(s=>{(byPair[s.pair]=byPair[s.pair]||{w:0,t:0}),byPair[s.pair].t++;if(s.result==='TP Hit')byPair[s.pair].w++;});
   let best=null,bestR=-1;for(const[k,v]of Object.entries(byPair)){const r=v.w/v.t;if(v.t>=2&&r>bestR){bestR=r;best={pair:k,rate:Math.round(r*100)};}}
   // active signals' avg confidence (spec: average confidence of active signals)
   const act=SIGNALS.filter(s=>s.status==='running');
   const avgConf=act.length?Math.round(act.reduce((s,x)=>s+x.confidence,0)/act.length):(today.length?Math.round(today.reduce((s,x)=>s+x.confidence,0)/today.length):0);
   // best timeframe & best session (by win rate, min 2 closed)
-  const grp=(kf)=>{const m={};SIGNALS.filter(s=>s.status==='closed'&&s.result!=='Expired').forEach(s=>{const k=kf(s);if(!k)return;(m[k]=m[k]||{w:0,t:0}),m[k].t++;if(s.result==='TP Hit')m[k].w++;});return m;};
+  const grp=(kf)=>{const m={};SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit')).forEach(s=>{const k=kf(s);if(!k)return;(m[k]=m[k]||{w:0,t:0}),m[k].t++;if(s.result==='TP Hit')m[k].w++;});return m;};
   const pickBest=(m)=>{let r=-1,k=null;for(const[kk,v]of Object.entries(m)){if(v.t<2)continue;const rate=v.w/v.t;if(rate>r){r=rate;k={n:kk,rate:Math.round(rate*100)};}}return k;};
   const bestTf=pickBest(grp(s=>s.timeframe)), bestSess=pickBest(grp(s=>s.session||s.sess));
   // current streak
   let streak=0,sType=null;
-  for(const s of SIGNALS.filter(s=>s.status==='closed'&&s.result!=='Expired').sort((a,b)=>b.ts-a.ts)){const w=s.result==='TP Hit';if(sType===null){sType=w;streak=1;}else if(w===sType)streak++;else break;}
+  for(const s of SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit')).sort((a,b)=>b.ts-a.ts)){const w=s.result==='TP Hit';if(sType===null){sType=w;streak=1;}else if(w===sType)streak++;else break;}
   const tiles=[
     {l:'Today\'s Signals',ic:'⚡',v:today.length,s:today.length?`${today.filter(s=>s.action==='BUY').length} buy · ${today.filter(s=>s.action==='SELL').length} sell`:'none yet',cls:today.length?'up':''},
     {l:'Weekly Win Rate',ic:'🎯',v:wk.length?winRate+'%':'—',s:wk.length?`${wkWins}/${wk.length} closed`:'no closed trades',cls:winRate>=50?'up':'down'},
@@ -2229,7 +2469,7 @@ function renderTiles(){
 }
 
 /* ----- Signal history ----- */
-function refreshSignalUI(){rebuildLearning();renderTiles();renderHistory();renderAnalytics();renderDailyReport();}
+function refreshSignalUI(){rebuildLearning();discoverLessons();renderTiles();renderHistory();renderAnalytics();renderSim();renderBrain();renderDailyReport();}
 function renderHistory(){
   const q=($('histSearch')?.value||'').toUpperCase();
   const f=$('histFilter')?.value||'all';
@@ -2244,7 +2484,7 @@ function renderHistory(){
   if(!rows.length){el.innerHTML='<div class="empty">No matching signals.</div>';return;}
   el.innerHTML=rows.slice(0,100).map(s=>{
     const d=new Date(s.ts),dt=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    const rp=s.status==='running'?'<span class="pill run">RUNNING</span>':s.result==='TP Hit'?'<span class="pill tp">TP HIT</span>':s.result==='SL Hit'?'<span class="pill sl">SL HIT</span>':'<span class="pill exp">EXPIRED</span>';
+    const rp=s.status==='running'?'<span class="pill run">RUNNING</span>':s.result==='TP Hit'?'<span class="pill tp">TP HIT</span>':s.result==='SL Hit'?'<span class="pill sl">SL HIT</span>':s.result==='BE/Trail'?'<span class="pill" style="background:rgba(34,211,224,.16);color:var(--accent2)">BREAK-EVEN</span>':'<span class="pill exp">EXPIRED</span>';
     const extra=[s.regime,s.session].filter(Boolean).join(' · ');
     return `<div class="hrow">
       <span class="hp">${s.pair}<small>${s.timeframe} · ${dt}</small></span>
@@ -2263,6 +2503,10 @@ $('histFilter')?.addEventListener('change',renderHistory);
 (function(){const sel=$('confThresh');if(sel){sel.value=String(CONF_THRESHOLD);
   sel.onchange=()=>{CONF_THRESHOLD=parseInt(sel.value,10);localStorage.setItem('fm_confThresh',sel.value);
     toast('📧 Email threshold updated',CONF_THRESHOLD?`Only signals ≥ ${CONF_THRESHOLD}% are emailed`:'All signals are emailed','');};}})();
+// account simulator inputs
+(function(){const a=$('simStart'),b=$('simRisk');
+  if(a){a.value=localStorage.getItem('fm_simStart')||'50';a.oninput=()=>{localStorage.setItem('fm_simStart',a.value||'50');renderSim();};}
+  if(b){b.value=localStorage.getItem('fm_simRisk')||'2';b.onchange=()=>{localStorage.setItem('fm_simRisk',b.value);renderSim();};}})();
 
 /* ----- Alert center ----- */
 function alertIcon(t){return t==='signal'?'⚡':t==='tp'?'✅':t==='sl'?'🛑':t==='warn'?'⚠️':'🔔';}
@@ -2276,7 +2520,7 @@ function renderAlerts(){
   const el=$('alerts');if(!el)return;
   const unread=ALERTS.filter(a=>!a.read).length;
   $('alertCount').innerHTML=unread?`<span class="badge-count">${unread}</span>`:'';
-  const tb=document.querySelector('#tabbar [data-tab="alerts"]');
+  const tb=document.querySelector('#tabbar [data-tab="signals"]');
   if(tb)tb.style.color=unread?'var(--red)':'';
   if(!ALERTS.length){el.innerHTML='<div class="empty">No alerts yet.</div>';return;}
   el.innerHTML=ALERTS.slice(0,60).map(a=>{
@@ -2290,7 +2534,7 @@ $('clearAlerts').onclick=async()=>{ALERTS.forEach(a=>a.read=true);renderAlerts()
 
 /* ----- Performance analytics ----- */
 function computeStats(){
-  const closed=SIGNALS.filter(s=>s.status==='closed'&&s.result!=='Expired');
+  const closed=SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit'));
   const wins=closed.filter(s=>s.result==='TP Hit'),losses=closed.filter(s=>s.result==='SL Hit');
   const wr=closed.length?Math.round(wins.length/closed.length*100):0;
   const rrs=closed.map(s=>{const risk=Math.abs(s.entry-s.sl),rew=Math.abs(s.tp1-s.entry);return risk?rew/risk:0;}).filter(x=>x>0);
@@ -2316,8 +2560,68 @@ function computeStats(){
   const avg=(arr)=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):null;
   const ttTP=avg(wins.filter(s=>s.durationMin).map(s=>s.durationMin));
   const ttSL=avg(losses.filter(s=>s.durationMin).map(s=>s.durationMin));
-  return {closed,wins,losses,wr,wr7,wr30,wr90,avgRR,maxW,maxL,curve,byPair,byTf,bySession,pick,monthR,streak,streakType,ttTP,ttSL,
+  /* ----- $ ACCOUNT SIMULATOR (start $50, risk 2% compounding) -----
+     each trade risks RISK% of current balance; win adds risk×RR,
+     loss subtracts risk, BE/Trail adds the trailed gain proportionally. */
+  const START=parseFloat(localStorage.getItem('fm_simStart')||'50');
+  const RISKPCT=parseFloat(localStorage.getItem('fm_simRisk')||'2')/100;
+  let bal=START; const balCurve=[START]; let peak=START,maxDD=0;
+  // include BE/Trail in chronological order
+  const simTrades=SIGNALS.filter(s=>s.status==='closed'&&s.result&&s.result!=='Expired').sort((a,b)=>a.ts-b.ts);
+  simTrades.forEach(s=>{
+    const risk=Math.abs(s.entry-(s.slOrig||s.sl))||1e-9, rew=Math.abs(s.tp1-s.entry);
+    const rr=rew/risk;
+    const stake=bal*RISKPCT;
+    if(s.result==='TP Hit')bal+=stake*rr;
+    else if(s.result==='SL Hit')bal-=stake;
+    else if(s.result==='BE/Trail'){const g=(s.action==='BUY'?(s.sl-s.entry):(s.entry-s.sl))/risk;bal+=stake*g;}
+    peak=Math.max(peak,bal);maxDD=Math.max(maxDD,(peak-bal)/peak*100);
+    balCurve.push(bal);
+  });
+  const sim={start:START,riskPct:RISKPCT*100,balance:bal,growthPct:(bal/START-1)*100,trades:simTrades.length,curve:balCurve,maxDD};
+  return {closed,wins,losses,wr,wr7,wr30,wr90,avgRR,maxW,maxL,curve,byPair,byTf,bySession,pick,monthR,streak,streakType,ttTP,ttSL,sim,
     expired:SIGNALS.filter(s=>s.result==='Expired').length};
+}
+function renderBrain(){
+  const el=$('brainBox');if(!el)return;
+  const pm=profitMetrics();
+  const learnedFrom=SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit')).length;
+  const best=(grp)=>{let r=-1,k='—';for(const[kk,v]of Object.entries(LEARN[grp]||{})){if(v.t<5)continue;const wr=v.w/v.t;if(wr>r){r=wr;k=kk+' '+Math.round(wr*100)+'%';}}return k;};
+  const si=activeSessionInfo();
+  const stats=[
+    ['Signals Learned',learnedFrom],
+    ['Knowledge Rules',KNOWLEDGE.length],
+    ['Profit Factor',pm.pf===Infinity?'∞':pm.pf.toFixed(2)],
+    ['Win Rate',pm.n?pm.wr+'%':'—'],
+    ['Avg RR','1:'+pm.avgRR],
+    ['Expectancy',pm.n?pm.expectancy.toFixed(2)+'R':'—'],
+    ['Best Pair',best('pair')],
+    ['Best Session',best('session')],
+    ['Market Regime',(cache[key(current)+'_'+tf.id]?analyze(cache[key(current)+'_'+tf.id]).regime:'—')]
+  ];
+  const discovered=KNOWLEDGE.filter(k=>!k.seeded);
+  const foundation=KNOWLEDGE.filter(k=>k.seeded);
+  const card=k=>`<div class="lesson ${k.importance==='high'?'high':''}"><div><div class="lt">${k.title}</div><div class="ld">${k.description}</div><div class="le">${k.category}${k.seeded?' · foundation':' · '+k.evidence+' samples'} · ${k.confidence}% conf</div></div></div>`;
+  el.innerHTML=`<div class="brain-grid">${stats.map(([l,n])=>`<div class="bstat"><div class="l">${l}</div><div class="n">${n}</div></div>`).join('')}</div>
+    <div class="brain-h">💡 Discovered from your data (${discovered.length})</div>
+    ${discovered.length?discovered.slice(0,6).map(card).join(''):'<div class="empty">None yet — these self-generate once a condition has 12+ closed signals.</div>'}
+    <div class="brain-h">📖 Foundation knowledge (${foundation.length})</div>
+    ${foundation.slice(0,14).map(card).join('')}`;
+}
+function renderSim(){
+  const el=$('simBox');if(!el)return;
+  const S=computeStats();const m=S.sim;
+  if(!m.trades){el.innerHTML='<div class="empty">No closed trades yet. Once signals hit TP/SL, your simulated $'+m.start+' balance grows here.</div>';return;}
+  const up=m.balance>=m.start;
+  const c=m.curve,mn=Math.min(...c),mx=Math.max(...c),rng=(mx-mn)||1;
+  const spark=`<div class="equity" style="height:60px">${c.map(v=>{const h=Math.round((v-mn)/rng*100);return `<div class="eb" title="$${v.toFixed(2)}" style="height:${Math.max(2,h)}%;background:${up?'linear-gradient(180deg,#34e3a4,#3dd7e0)':'linear-gradient(180deg,#ff5f7a,#ffbb45)'}"></div>`;}).join('')}</div>`;
+  el.innerHTML=`
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+      <div style="font-size:30px;font-weight:800;font-family:'Space Grotesk'">$${m.balance.toFixed(2)}</div>
+      <div class="${up?'up':'down'}" style="font-weight:800;font-size:15px">${up?'+':''}${m.growthPct.toFixed(1)}%</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:12px">from $${m.start} · ${m.riskPct}% risk/trade · ${m.trades} trades · max drawdown ${m.maxDD.toFixed(1)}%</div>
+    ${spark}`;
 }
 function renderAnalytics(){
   const el=$('analytics');if(!el)return;
@@ -2348,7 +2652,7 @@ function renderAnalytics(){
     ['7-Day Win',S.wr7==null?'—':S.wr7+'%'],['30-Day Win',S.wr30==null?'—':S.wr30+'%'],
     ['90-Day Win',S.wr90==null?'—':S.wr90+'%'],['Total Signals',SIGNALS.length],
     ['Closed',S.closed.length],['Expired',S.expired],
-    ['Current Streak',(S.streak?`${S.streak} ${S.streakType?'win':'loss'}${S.streak>1?'s':''}`:'—')],['Max Win Streak',S.maxW],
+    ['Current Streak',(S.streak?`${S.streak} ${S.streakType?(S.streak>1?'wins':'win'):(S.streak>1?'losses':'loss')}`:'—')],['Max Win Streak',S.maxW],
     ['Best Pair',S.pick(S.byPair,true)],['Worst Pair',S.pick(S.byPair,false)],
     ['Best Session',S.pick(S.bySession,true)],['Worst Session',S.pick(S.bySession,false)],
     ['Best TF',S.pick(S.byTf,true)],['Worst TF',S.pick(S.byTf,false)],
@@ -2362,7 +2666,7 @@ function renderAnalytics(){
 function buildDailyReport(){
   const today=todayStr();
   const todays=SIGNALS.filter(s=>new Date(s.ts).toDateString()===today);
-  const closedToday=todays.filter(s=>s.status==='closed'&&s.result!=='Expired');
+  const closedToday=todays.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit'));
   const wins=closedToday.filter(s=>s.result==='TP Hit');
   const losses=closedToday.filter(s=>s.result==='SL Hit');
   const wr=closedToday.length?Math.round(wins.length/closedToday.length*100):0;
@@ -2471,7 +2775,10 @@ checkDailyReportSchedule();
 const SCAN_TF=TFS.find(t=>t.id==='15m')||tf;   // scan timeframe (15m default)
 const scanState={};                            // last action per pair to detect changes
 let scanFirst=true;
+let scanBusy=false;   // prevent overlapping scans (run-to-completion safety)
 async function scanAllPairs(){
+  if(scanBusy)return; scanBusy=true;
+  try{
   for(const p of PAIRS){
     let cs=cache[key(p)+'_'+SCAN_TF.id];
     if(!cs){ try{cs=await getCandles(p,SCAN_TF);}catch(e){continue;} }
@@ -2497,6 +2804,7 @@ async function scanAllPairs(){
   scanFirst=false;
   const si=$('scanInfo');if(si)si.textContent=`scanning ${PAIRS.length} pairs · ${SCAN_TF.label}`;
   refreshSignalUI();
+  }finally{ scanBusy=false; }
 }
 // generic versions that take an explicit pair + timeframe (don't depend on the viewed chart)
 async function logSignalFor(p,a,t){
@@ -2530,7 +2838,8 @@ async function emailSignalFor(p,a,t){
     symbol:sym(p),timeframe:t.label,action:a.action,confidence:a.conf,tier:a.tier,riskLevel:a.riskLevel,rr:rr.toFixed(2),
     price:fmt(a.last,p),entry:fmt(a.plan.entry,p),stop:fmt(a.plan.sl,p),tp1:fmt(a.plan.tp1,p),tp2:fmt(a.plan.tp2,p),
     trend:a.trendLabel,momentum:a.momLabel,zone:a.zoneUp?'9 EMA above 21 EMA':'9 EMA below 21 EMA',macd:a.macdUp?'Bullish':'Bearish',
-    regime:a.regime,structure:a.structure,explain,
+    regime:a.regime,structure:a.structure,explain,decision:a.decision,
+    similar:a.similar&&a.similar.count?`${a.similar.count} similar setups · ${a.similar.wr}% win · avg RR ${a.similar.avgRR}`:'',
     reasons:a.reasons.join(' · '),
     session:si.open.length?`${si.open.join(' + ')} open${si.killzone?', '+si.killzone+' killzone':''}`:'Between sessions'
   })});
@@ -2560,7 +2869,7 @@ setInterval(async()=>{
   await renderWatchlist();
   await loadCalendar();
   // Firestore-backed data (waits for FB module; falls back to local if offline)
-  const initFB=async()=>{ await loadSignals(); await loadAlerts(); await loadJournal(); await trackOutcomes(); };
+  const initFB=async()=>{ await loadKnowledge(); await loadSignals(); await loadAlerts(); await loadJournal(); await trackOutcomes(); };
   if(window.FB){ initFB(); } else { window.addEventListener('fb-ready',initFB,{once:true}); setTimeout(initFB,2500); }
   $('briefModal').classList.add('show');
   // generate + speak the briefing on open (voice needs a user gesture in some browsers;

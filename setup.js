@@ -66,7 +66,7 @@ GMAIL_APP_PASSWORD=${env.GMAIL_APP_PASSWORD || ''}
 ALERT_TO=${env.ALERT_TO || 'cletusmawa@gmail.com'}
 
 # Optional settings
-GEMINI_MODEL=${env.GEMINI_MODEL || 'gemini-1.5-flash'}
+GEMINI_MODEL=${env.GEMINI_MODEL || 'gemini-2.5-flash'}
 PORT=${env.PORT || '3000'}
 `;
   fs.writeFileSync(ENV_PATH, content, { mode: 0o600 }); // owner read/write only

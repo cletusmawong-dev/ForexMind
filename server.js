@@ -22,8 +22,10 @@ app.use(express.static(__dirname)); // serve index.html etc.
 
 const PORT = process.env.PORT || 3000;
 const TD_KEY = process.env.TWELVE_DATA_KEY || '';
-const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+// NOTE: this baked-in key is a TESTING fallback only. Your .env / host env
+// var GEMINI_API_KEY (if set) always takes priority. Replace before real use.
+const GEMINI_KEY = process.env.GEMINI_API_KEY || 'AQ.Ab8RN6KGlHSk9zybIyLULpA7f7sE1g52B2oXMUApvi6SDV_T_g';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GMAIL_USER = process.env.GMAIL_USER || '';
 const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD || '';
 const ALERT_TO = process.env.ALERT_TO || GMAIL_USER || '';
@@ -129,9 +131,9 @@ app.get('/api/calendar', async (_req, res) => {
 });
 
 /* ===================== GEMINI HELPER ===================== */
-async function callGemini(system, userContent, maxTokens = 700) {
+async function callGeminiOnce(model, system, userContent, maxTokens) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/`
-    + `${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
+    + `${model}:generateContent?key=${GEMINI_KEY}`;
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -146,6 +148,23 @@ async function callGemini(system, userContent, maxTokens = 700) {
   const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text).join('').trim();
   if (!text) throw new Error('gemini_empty_response');
   return text;
+}
+// Retries on transient "high demand" errors, then falls back to a second model.
+async function callGemini(system, userContent, maxTokens = 700) {
+  const models = [GEMINI_MODEL, 'gemini-2.0-flash'];
+  let lastErr;
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try { return await callGeminiOnce(model, system, userContent, maxTokens); }
+      catch (e) {
+        lastErr = e;
+        const transient = /high demand|overload|503|429|rate|quota|unavailable/i.test(e.message);
+        if (transient && attempt === 0) { await new Promise(r => setTimeout(r, 900)); continue; }
+        break; // non-transient or already retried -> try next model
+      }
+    }
+  }
+  throw lastErr || new Error('gemini_failed');
 }
 
 const TRADING_SYSTEM = `You are ForexMind, a knowledgeable and friendly AI trading assistant and all-round market companion.
@@ -200,16 +219,21 @@ Keep it tight and skimmable.`;
 app.post('/api/chat', async (req, res) => {
   if (!GEMINI_KEY) return res.json({ fallback: true, reason: 'no_gemini_key' });
   try {
-    const { message, context } = req.body || {};
+    const { message, context, history } = req.body || {};
+    const convo = Array.isArray(history) && history.length
+      ? '\nRecent conversation (for context, so you can follow up naturally):\n'
+        + history.map(h => `${h.role === 'user' ? 'User' : 'You'}: ${h.text}`).join('\n') + '\n'
+      : '';
     const content =
-`User question: "${message}"
+`${convo}
+User's new message: "${message}"
 
-If the question relates to the live market, here is the current context you may use
-(use these real numbers; don't invent live prices). If the question is general, educational,
-or off-topic, just answer it directly — you don't have to mention this data:
+If it relates to the live market, here is the current context you may use
+(use these real numbers; don't invent live prices). If it's general, educational,
+or off-topic, just answer directly — you don't have to mention this data:
 ${JSON.stringify(context, null, 2)}
 
-Answer the user's actual question helpfully and conversationally.`;
+Answer the user's actual message helpfully and conversationally, taking the recent conversation into account.`;
     const text = await callGemini(TRADING_SYSTEM, content, 700);
     res.json({ live: true, text });
   } catch (e) {
@@ -288,6 +312,8 @@ app.post('/api/notify/signal', async (req, res) => {
         <div style="color:#eef3fb;font-weight:700;font-size:13px;margin-bottom:8px">Why this signal</div>
         ${s.explain.split('\n').map(l=>{const ok=l.trim().startsWith('✓');return `<div style="font-size:13px;color:${ok?'#cfe9dd':'#f3c4cc'};padding:2px 0">${l}</div>`;}).join('')}
       </div>`:''}
+      ${s.similar?`<div style="font-size:13px;color:#a7b6d6;margin-bottom:6px">📊 ${s.similar}</div>`:''}
+      ${s.decision?`<div style="display:inline-block;background:rgba(110,139,255,.18);color:#aab8ff;font-weight:700;font-size:13px;padding:6px 14px;border-radius:20px;margin-bottom:8px">Decision: ${s.decision}</div>`:''}
       ${s.session?`<div style="margin-top:6px;font-size:13px;color:#a7b6d6">🕐 ${s.session}</div>`:''}`);
     await mailer.sendMail({
       from: `"ForexMind" <${GMAIL_USER}>`, to: ALERT_TO,
