@@ -244,23 +244,55 @@ app.post('/api/notify/signal', async (req, res) => {
     const s = req.body || {};
     const k = `sig:${s.symbol}:${s.timeframe}:${s.action}`;
     if (!canSend(k, 5 * 60 * 1000)) return res.json({ skipped: true, reason: 'throttled' });
-    const color = s.action === 'BUY' ? '#34e3a4' : s.action === 'SELL' ? '#ff5f7a' : '#ffbb45';
-    const html = glassEmail(`${s.action} · ${s.symbol} ${s.timeframe}`, `
-      <div style="font-size:26px;font-weight:800;color:${color};margin-bottom:8px">${s.action} ${s.symbol}</div>
-      <div style="color:#a7b6d6;margin-bottom:14px">${s.timeframe} · confidence ${s.confidence}% · ${new Date().toUTCString()}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:14px">
-        ${s.price!=null?`<tr><td style="padding:6px 0;color:#a7b6d6">Price</td><td style="text-align:right;font-weight:700">${s.price}</td></tr>`:''}
-        ${s.entry!=null?`<tr><td style="padding:6px 0;color:#a7b6d6">Entry</td><td style="text-align:right;font-weight:700">${s.entry}</td></tr>`:''}
-        ${s.stop!=null?`<tr><td style="padding:6px 0;color:#a7b6d6">Stop loss</td><td style="text-align:right;font-weight:700;color:#ff5f7a">${s.stop}</td></tr>`:''}
-        ${s.tp1!=null?`<tr><td style="padding:6px 0;color:#a7b6d6">Take profit 1</td><td style="text-align:right;font-weight:700;color:#34e3a4">${s.tp1}</td></tr>`:''}
-        ${s.tp2!=null?`<tr><td style="padding:6px 0;color:#a7b6d6">Take profit 2</td><td style="text-align:right;font-weight:700;color:#34e3a4">${s.tp2}</td></tr>`:''}
-      </table>
-      ${s.reasons?`<div style="margin-top:14px;color:#a7b6d6;font-size:13px">${s.reasons}</div>`:''}
-      ${s.session?`<div style="margin-top:10px;font-size:13px">🕐 ${s.session}</div>`:''}`);
+    const isBuy = s.action === 'BUY';
+    const color = isBuy ? '#34e3a4' : s.action === 'SELL' ? '#ff5f7a' : '#ffbb45';
+    const arrow = isBuy ? '▲' : '▼';
+    const confColor = s.confidence>=85?'#34e3a4':s.confidence>=70?'#3dd7e0':s.confidence>=55?'#ffbb45':'#ff5f7a';
+    const confLabel = s.confidence>=85?'STRONG':s.confidence>=70?'GOOD':s.confidence>=50?'MODERATE':'WEAK';
+    const row=(l,v,c)=>v!=null&&v!==''?`<tr><td style="padding:7px 0;color:#a7b6d6;font-size:13px">${l}</td><td style="text-align:right;font-weight:700;font-size:14px;${c?'color:'+c:''}">${v}</td></tr>`:'';
+    const html = glassEmail(`${arrow} ${s.action} ${s.symbol}`, `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:28px;font-weight:800;color:${color}">${arrow} ${s.action}</span>
+        <span style="font-size:20px;font-weight:700;color:#eef3fb">${s.symbol}</span>
+      </div>
+      <div style="display:inline-block;background:${confColor};color:#06101f;font-weight:800;font-size:12px;padding:4px 12px;border-radius:20px;margin-bottom:14px">
+        ${confLabel} · ${s.confidence}% confidence
+      </div>
+      <div style="color:#75849f;font-size:12px;margin-bottom:14px">${s.timeframe} timeframe · ${new Date().toUTCString()}</div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:6px 16px;margin-bottom:14px">
+        <table style="width:100%;border-collapse:collapse">
+          ${row('Current price',s.price)}
+          ${row('Entry',s.entry,color)}
+          ${row('Stop loss',s.stop,'#ff5f7a')}
+          ${row('Take profit 1',s.tp1,'#34e3a4')}
+          ${row('Take profit 2',s.tp2,'#34e3a4')}
+        </table>
+      </div>
+
+      <div style="background:rgba(125,150,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:6px 16px;margin-bottom:14px">
+        <table style="width:100%;border-collapse:collapse">
+          ${row('Risk / Reward', s.rr?('1:'+s.rr):null)}
+          ${row('Tier', s.tier)}
+          ${row('Risk level', s.riskLevel)}
+          ${row('Market regime', s.regime)}
+          ${row('Structure', s.structure)}
+          ${row('Impulse MACD',s.macd, s.macd==='Bullish'?'#34e3a4':'#ff5f7a')}
+          ${row('EMA 9 / 21',s.zone)}
+          ${row('Trend',s.trend)}
+          ${row('Momentum',s.momentum)}
+        </table>
+      </div>
+
+      ${s.explain?`<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 16px;margin-bottom:12px">
+        <div style="color:#eef3fb;font-weight:700;font-size:13px;margin-bottom:8px">Why this signal</div>
+        ${s.explain.split('\n').map(l=>{const ok=l.trim().startsWith('✓');return `<div style="font-size:13px;color:${ok?'#cfe9dd':'#f3c4cc'};padding:2px 0">${l}</div>`;}).join('')}
+      </div>`:''}
+      ${s.session?`<div style="margin-top:6px;font-size:13px;color:#a7b6d6">🕐 ${s.session}</div>`:''}`);
     await mailer.sendMail({
       from: `"ForexMind" <${GMAIL_USER}>`, to: ALERT_TO,
-      subject: `⚡ ${s.action} ${s.symbol} ${s.timeframe} (${s.confidence}%)`,
-      text: `${s.action} ${s.symbol} ${s.timeframe} @ ${s.price}. Entry ${s.entry}, SL ${s.stop}, TP1 ${s.tp1}.`,
+      subject: `${isBuy?'🟢':'🔴'} ${s.action} ${s.symbol} ${s.timeframe} · ${s.confidence}% (${s.tier||''})`,
+      text: `${s.action} ${s.symbol} (${s.timeframe}) @ ${s.price}\nEntry ${s.entry} | SL ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2}\nConfidence ${s.confidence}% (${s.tier}) | RR 1:${s.rr} | Regime ${s.regime}\nMACD ${s.macd} | Trend ${s.trend} | Momentum ${s.momentum}\n${(s.explain||s.reasons||'').replace(/\n/g,' | ')}`,
       html
     });
     res.json({ sent: true, to: ALERT_TO });
