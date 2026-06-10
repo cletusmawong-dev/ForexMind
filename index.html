@@ -552,7 +552,7 @@
     </div>
     <button class="btn" id="mailBtn" title="Email alerts"><span id="mailIcon">📧</span></button>
     <button class="btn" id="briefBtn">📋 Brief</button>
-    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">…</span></div>
+    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">…</span><span id="verTag" style="opacity:.6;margin-left:6px;font-size:10px"></span></div>
   </div>
 </header>
 
@@ -2985,7 +2985,9 @@ setInterval(async()=>{
 }, 60*1000);
 
 /* ---------- Init ---------- */
+const APP_VERSION='v6-mt5';   // bump this each deploy to confirm what's live
 (async function(){
+  const vt=$('verTag');if(vt)vt.textContent=APP_VERSION;
   updateVoiceBtn();
   renderToggles();
   const st=await api('/api/status');

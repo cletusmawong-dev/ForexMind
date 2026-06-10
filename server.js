@@ -18,7 +18,12 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(__dirname)); // serve index.html etc.
+// Always serve a fresh index.html (prevents phones/browsers caching old versions).
+app.get('/', (_req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.use(express.static(__dirname, { etag: false, lastModified: false, maxAge: 0 }));
 
 const PORT = process.env.PORT || 3000;
 const TD_KEY = process.env.TWELVE_DATA_KEY || '';
