@@ -720,6 +720,11 @@
 
 
     <div class="card sec" data-sec="folio">
+      <h2>💹 Live MT5 Account <span class="rr" id="mt5AcctTag"></span></h2>
+      <div class="pad" id="mt5AcctBox"><div class="empty">Connect the MT5 bridge to see your real demo account here.</div></div>
+    </div>
+
+    <div class="card sec" data-sec="folio">
       <h2>Risk / Position Calculator</h2>
       <div class="calc">
         <div class="grid2">
@@ -2697,6 +2702,41 @@ function renderBrain(){
     <div class="brain-h">📖 Foundation knowledge (${foundation.length})</div>
     ${foundation.slice(0,14).map(card).join('')}`;
 }
+/* ----- Live MT5 account (from the bridge via Firestore) ----- */
+async function renderMT5Account(){
+  const el=$('mt5AcctBox');if(!el)return;
+  if(!(window.FB&&window.FB.ok))return;
+  let a=null; try{a=await window.FB.getDoc('mt5_account','live');}catch(e){}
+  const tag=$('mt5AcctTag');
+  if(!a||(Date.now()-(a.updated||0))>2*60*1000){
+    if(tag)tag.textContent='offline';
+    el.innerHTML='<div class="empty">MT5 bridge not connected (run python bridge.py on your PC).</div>';
+    return;
+  }
+  if(tag)tag.textContent=(a.is_demo?'DEMO · ':'')+a.login;
+  const prof=(a.profit||0), up=prof>=0;
+  const eqUp=(a.equity||0)>=(a.balance||0);
+  const pos=(a.positions||[]).map(p=>{
+    const pu=p.profit>=0;
+    return `<tr><td><b>${p.symbol}</b></td><td class="${p.type==='BUY'?'up':'down'}">${p.type}</td>
+      <td>${p.volume}</td><td>${(+p.price_open).toFixed(2)}</td><td>${(+p.price_now).toFixed(2)}</td>
+      <td class="${pu?'up':'down'}">${pu?'+':''}${(+p.profit).toFixed(2)}</td></tr>`;
+  }).join('');
+  el.innerHTML=`
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;margin-bottom:8px">
+      <div><div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Balance</div>
+        <div style="font-size:26px;font-weight:800;font-family:'Space Grotesk'">${(a.balance||0).toFixed(2)} ${a.currency||''}</div></div>
+      <div><div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Equity</div>
+        <div class="${eqUp?'up':'down'}" style="font-size:20px;font-weight:800">${(a.equity||0).toFixed(2)}</div></div>
+      <div><div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Open P/L</div>
+        <div class="${up?'up':'down'}" style="font-size:20px;font-weight:800">${up?'+':''}${prof.toFixed(2)}</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:10px">${a.server} · free margin ${(a.free_margin||0).toFixed(2)} · ${a.open_count||0} open</div>
+    ${pos?`<table><thead><tr><th>Pair</th><th>Side</th><th>Lots</th><th>Open</th><th>Now</th><th>P/L</th></tr></thead><tbody>${pos}</tbody></table>`
+        :'<div class="empty">No open positions right now.</div>'}`;
+}
+setInterval(renderMT5Account, 15000);
+
 function renderSim(){
   const el=$('simBox');if(!el)return;
   const S=computeStats();const m=S.sim;
@@ -2958,7 +2998,7 @@ setInterval(async()=>{
   await renderWatchlist();
   await loadCalendar();
   // Firestore-backed data (waits for FB module; falls back to local if offline)
-  const initFB=async()=>{ await loadKnowledge(); await loadSignals(); await loadAlerts(); await loadJournal(); await trackOutcomes(); };
+  const initFB=async()=>{ await loadKnowledge(); await loadSignals(); await loadAlerts(); await loadJournal(); await trackOutcomes(); renderMT5Account(); };
   if(window.FB){ initFB(); } else { window.addEventListener('fb-ready',initFB,{once:true}); setTimeout(initFB,2500); }
   $('briefModal').classList.add('show');
   // generate + speak the briefing on open (voice needs a user gesture in some browsers;
