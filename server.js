@@ -24,8 +24,13 @@ const PORT = process.env.PORT || 3000;
 const TD_KEY = process.env.TWELVE_DATA_KEY || '';
 // NOTE: this baked-in key is a TESTING fallback only. Your .env / host env
 // var GEMINI_API_KEY (if set) always takes priority. Replace before real use.
-const GEMINI_KEY = process.env.GEMINI_API_KEY || 'AQ.Ab8RN6KGlHSk9zybIyLULpA7f7sE1g52B2oXMUApvi6SDV_T_g';
+const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// NVIDIA NIM (OpenAI-compatible) — get a free key (starts with "nvapi-") at https://build.nvidia.com
+const NVIDIA_KEY = process.env.NVIDIA_API_KEY || '';
+const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
+const AI_PROVIDER = NVIDIA_KEY ? 'nvidia' : (GEMINI_KEY ? 'gemini' : 'none');
+const HAS_AI = AI_PROVIDER !== 'none';
 const GMAIL_USER = process.env.GMAIL_USER || '';
 const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD || '';
 const ALERT_TO = process.env.ALERT_TO || GMAIL_USER || '';
@@ -131,6 +136,7 @@ app.get('/api/calendar', async (_req, res) => {
 });
 
 /* ===================== GEMINI HELPER ===================== */
+/* ---------- Gemini (Google) ---------- */
 async function callGeminiOnce(model, system, userContent, maxTokens) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/`
     + `${model}:generateContent?key=${GEMINI_KEY}`;
@@ -149,44 +155,92 @@ async function callGeminiOnce(model, system, userContent, maxTokens) {
   if (!text) throw new Error('gemini_empty_response');
   return text;
 }
-// Retries on transient "high demand" errors, then falls back to a second model.
-async function callGemini(system, userContent, maxTokens = 700) {
-  const models = [GEMINI_MODEL, 'gemini-2.0-flash'];
+/* ---------- NVIDIA NIM (OpenAI-compatible) ---------- */
+async function callNvidiaOnce(model, system, userContent, maxTokens) {
+  const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'authorization': `Bearer ${NVIDIA_KEY}` },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: userContent }
+      ],
+      temperature: 0.6,
+      max_tokens: maxTokens
+    })
+  });
+  const j = await r.json();
+  if (j.error) throw new Error((j.error.message || JSON.stringify(j.error)));
+  const text = (j.choices?.[0]?.message?.content || '').trim();
+  if (!text) throw new Error('nvidia_empty_response');
+  return text;
+}
+// Unified AI call: uses NVIDIA if configured, else Gemini. Retries transient errors + model fallback.
+async function callAI(system, userContent, maxTokens = 700) {
   let lastErr;
+  if (AI_PROVIDER === 'nvidia') {
+    const models = [NVIDIA_MODEL, 'meta/llama-3.1-8b-instruct'];
+    for (const model of models) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try { return await callNvidiaOnce(model, system, userContent, maxTokens); }
+        catch (e) { lastErr = e;
+          const transient = /overload|503|429|rate|quota|unavailable|timeout/i.test(e.message);
+          if (transient && attempt === 0) { await new Promise(r => setTimeout(r, 900)); continue; }
+          break;
+        }
+      }
+    }
+    throw lastErr || new Error('nvidia_failed');
+  }
+  // Gemini
+  const models = [GEMINI_MODEL, 'gemini-2.0-flash'];
   for (const model of models) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try { return await callGeminiOnce(model, system, userContent, maxTokens); }
-      catch (e) {
-        lastErr = e;
+      catch (e) { lastErr = e;
         const transient = /high demand|overload|503|429|rate|quota|unavailable/i.test(e.message);
         if (transient && attempt === 0) { await new Promise(r => setTimeout(r, 900)); continue; }
-        break; // non-transient or already retried -> try next model
+        break;
       }
     }
   }
   throw lastErr || new Error('gemini_failed');
 }
+// keep old name working
+const callGemini = callAI;
 
-const TRADING_SYSTEM = `You are ForexMind, a knowledgeable and friendly AI trading assistant and all-round market companion.
-Your specialty is the user's strategy — a Zone MA ribbon (MA9 vs MA21; green when MA9>MA21, red when below)
-plus the Impulse MACD (LazyBear, length 34, signal 9) — applied to gold (XAU/USD) and major forex pairs. You
-also weigh high-impact USD economic events and the active trading session / ICT killzone (Sydney, Tokyo/Asian,
-London, New York) because liquidity and volatility depend on them.
+const TRADING_SYSTEM = `You are ForexMind — an elite AI trading analyst and the brain of a self-learning trading platform.
 
-But you are NOT limited to that. You can freely answer ANY question the user asks — trading education
-(what is a pip, leverage, risk management, order types, candlestick patterns, market structure, psychology),
-explanations of any instrument or concept, general finance, or even casual conversation. Be genuinely helpful
-and conversational, like a smart trading buddy.
+CORE STRATEGY (this is how the platform trades):
+- The CORE signal engine is the Zero Lag Trend (AlgoAlpha, length 70, band ×1.2): a zero-lag EMA with a
+  volatility band. A bullish flip = primary BUY bias, bearish flip = primary SELL bias.
+- CONFIRMATIONS that strengthen or weaken a signal: SuperTrend (10,3), EMA 9 vs 21, Impulse MACD (34,9),
+  higher-timeframe (H4/D1) agreement, market regime (trending/ranging/chaotic), market structure (HH/HL vs LH/LL),
+  ATR health, volume, support/resistance distance, active session/killzone, and the platform's own historical
+  win-rate data for that pair/timeframe/session/setup ("similar setups").
+- Confidence 0-100: 90+ Elite, 80-89 Strong, 70-79 Moderate, <70 ignore. Optimise for profit factor &
+  expectancy, NOT win rate alone (a 38% win rate at 3:1 R:R is highly profitable).
 
-Rules:
-- Answer the actual question asked. If it's general or off-topic, just answer it naturally — don't force it back to gold.
-- When you DO have the live snapshot/calendar/session context, use those real numbers; never fabricate specific live prices you weren't given.
-- Be concise, structured, and practical. Use short paragraphs or bullets.
-- Briefly note risk management where relevant, as a personal trading desk would.`;
+HOW TO REASON (be a sharp analyst, not a generic chatbot):
+- Lead with a clear verdict, then justify it from the data you're given (snapshot, sessions, knowledge rules,
+  discovered lessons, similar-setup stats). Connect multiple factors into one coherent thesis.
+- Weigh evidence: say what AGREES and what CONFLICTS, and conclude with conviction (e.g. "high-probability",
+  "wait for confirmation", "stand aside").
+- Reference the platform's learned lessons & historical performance when relevant — that's your edge.
+- Give actionable specifics: bias, what would invalidate it, and risk management (position size, stop, R:R).
+
+YOU CAN ALSO answer ANY question — trading education, concepts, psychology, general finance, or casual chat.
+Answer the actual question naturally; don't force everything back to gold.
+
+RULES:
+- Use the real numbers in the provided context; never invent live prices you weren't given.
+- Be concise and structured (short paragraphs / bullets). Sound confident and professional but honest about uncertainty.
+- Always fold in brief risk management where a trade is involved.`;
 
 /* ===================== DAILY BRIEFING ===================== */
 app.post('/api/brief', async (req, res) => {
-  if (!GEMINI_KEY) return res.json({ fallback: true, reason: 'no_gemini_key' });
+  if (!HAS_AI) return res.json({ fallback: true, reason: 'no_ai_key' });
   try {
     const { snapshot, calendar, sessions } = req.body || {};
     const content =
@@ -217,7 +271,7 @@ Keep it tight and skimmable.`;
 
 /* ===================== CHAT ===================== */
 app.post('/api/chat', async (req, res) => {
-  if (!GEMINI_KEY) return res.json({ fallback: true, reason: 'no_gemini_key' });
+  if (!HAS_AI) return res.json({ fallback: true, reason: 'no_ai_key' });
   try {
     const { message, context, history } = req.body || {};
     const convo = Array.isArray(history) && history.length
@@ -331,15 +385,16 @@ app.post('/api/notify/signal', async (req, res) => {
 app.get('/api/status', (_req, res) => res.json({
   ok: true,
   hasMarketData: !!TD_KEY,
-  hasAI: !!GEMINI_KEY,
+  hasAI: HAS_AI,
+  provider: AI_PROVIDER,
   hasEmail: !!mailer,
   alertTo: mailer ? ALERT_TO : null,
-  model: GEMINI_KEY ? GEMINI_MODEL : null
+  model: AI_PROVIDER === 'nvidia' ? NVIDIA_MODEL : (AI_PROVIDER === 'gemini' ? GEMINI_MODEL : null)
 }));
 
 app.listen(PORT, () => {
   console.log(`\nForexMind running → http://localhost:${PORT}`);
   console.log(`  Market data (Twelve Data): ${TD_KEY ? 'ENABLED' : 'missing key → simulated fallback'}`);
-  console.log(`  AI (Google Gemini):        ${GEMINI_KEY ? 'ENABLED' : 'missing key → local reasoning fallback'}`);
+  console.log(`  AI: ${AI_PROVIDER === 'nvidia' ? 'NVIDIA ('+NVIDIA_MODEL+')' : AI_PROVIDER === 'gemini' ? 'Google Gemini ('+GEMINI_MODEL+')' : 'none → local reasoning fallback'}`);
   console.log(`  Email (Gmail):             ${mailer ? 'ENABLED → ' + ALERT_TO : 'not configured (add GMAIL_USER + GMAIL_APP_PASSWORD)'}\n`);
 });

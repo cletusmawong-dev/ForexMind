@@ -10,19 +10,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#05080f; --bg2:#0a1224;
-    /* iOS-26 "Liquid Glass" surfaces: translucent, bright edge highlights */
-    --panel:rgba(255,255,255,.055); --panel-solid:#121a2e; --panel2:rgba(255,255,255,.04);
-    --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.055);
-    --text:#f0f4fc; --muted:#a7b6d6; --muted2:#75849f;
-    --accent:#6e8bff; --accent2:#3dd7e0; --violet:#b58cff;
-    --green:#34e3a4; --red:#ff5f7a; --amber:#ffbb45; --gold:#ffd24d;
-    --grad:linear-gradient(135deg,#6e8bff 0%,#46c8ff 55%,#3dd7e0 100%);
-    --grad-violet:linear-gradient(135deg,#b58cff,#6e8bff);
-    --shadow:0 26px 64px -16px rgba(0,0,0,.7);
-    --glow:0 0 0 1px rgba(110,139,255,.28),0 10px 34px -6px rgba(110,139,255,.4);
-    --blur:saturate(185%) blur(30px);
-    --r:22px;
+    /* refined slate-blue institutional theme (lighter, professional) */
+    --bg:#0e1626; --bg2:#142035;
+    --panel:rgba(255,255,255,.07); --panel-solid:#1a2740; --panel2:rgba(255,255,255,.05);
+    --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.07);
+    --text:#eef3fb; --muted:#b3c2dd; --muted2:#8294b4;
+    --accent:#5e9bff; --accent2:#34d9c8; --violet:#a98bff;
+    --green:#2fdca0; --red:#ff6483; --amber:#ffc24a; --gold:#ffd24d;
+    --grad:linear-gradient(135deg,#5e9bff 0%,#48c6e8 55%,#34d9c8 100%);
+    --grad-violet:linear-gradient(135deg,#a98bff,#5e9bff);
+    --shadow:0 22px 50px -18px rgba(6,12,24,.55);
+    --glow:0 0 0 1px rgba(94,155,255,.25),0 10px 30px -8px rgba(94,155,255,.35);
+    --blur:saturate(170%) blur(26px);
+    --r:20px;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{overscroll-behavior:none}
@@ -36,17 +36,16 @@
   body::before{
     content:'';position:fixed;inset:0;z-index:-2;
     background:
-      radial-gradient(760px 520px at 82% -12%,rgba(125,150,255,.30),transparent 60%),
-      radial-gradient(640px 520px at -6% 4%,rgba(80,225,235,.20),transparent 55%),
-      radial-gradient(620px 460px at 102% 64%,rgba(196,150,255,.20),transparent 55%),
-      radial-gradient(720px 520px at 30% 118%,rgba(255,160,210,.12),transparent 55%),
-      radial-gradient(900px 640px at 60% 130%,rgba(110,139,255,.16),transparent 55%),
-      var(--bg);
+      radial-gradient(820px 560px at 84% -14%,rgba(94,155,255,.26),transparent 62%),
+      radial-gradient(680px 560px at -8% 2%,rgba(52,217,200,.18),transparent 58%),
+      radial-gradient(640px 500px at 104% 60%,rgba(169,139,255,.16),transparent 58%),
+      radial-gradient(900px 680px at 50% 128%,rgba(72,198,232,.14),transparent 58%),
+      linear-gradient(180deg,#101a2c 0%,#0e1626 55%,#0c1322 100%);
   }
   body::after{
-    content:'';position:fixed;inset:-50%;z-index:-1;opacity:.55;
-    background:conic-gradient(from 0deg at 50% 50%,transparent,rgba(110,139,255,.07),transparent,rgba(61,215,224,.06),transparent,rgba(181,140,255,.06),transparent);
-    animation:spin 50s linear infinite;
+    content:'';position:fixed;inset:-50%;z-index:-1;opacity:.5;
+    background:conic-gradient(from 0deg at 50% 50%,transparent,rgba(94,155,255,.06),transparent,rgba(52,217,200,.06),transparent,rgba(169,139,255,.05),transparent);
+    animation:spin 60s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -56,9 +55,14 @@
   header{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:13px 18px; position:sticky; top:0; z-index:30;
-    background:rgba(10,14,26,.55); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);
-    border-bottom:1px solid var(--line); box-shadow:inset 0 -1px 0 rgba(255,255,255,.05);
+    background:linear-gradient(180deg,rgba(26,39,64,.72),rgba(20,32,53,.55)); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);
+    border-bottom:1px solid var(--line); box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
   }
+  /* flowing gradient accent line under the header */
+  header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--violet),transparent);
+    background-size:200% 100%;animation:flow 8s linear infinite;opacity:.7}
+  @keyframes flow{to{background-position:200% 0}}
   .brand{display:flex; align-items:center; gap:12px}
   .logo{
     width:42px;height:42px;border-radius:13px; position:relative;
@@ -1119,6 +1123,36 @@ function superTrend(cs,len=10,fac=3){
   }
   return out;
 }
+/* Zero Lag Trend Signals (AlgoAlpha) — length 70, band mult 1.2.
+   Faithful port: zlema = EMA(src + (src - src[lag]), length);
+   volatility = highest(ATR(length), length*3) * mult;
+   trend flips +1 on close>zlema+vol, -1 on close<zlema-vol. */
+function zeroLag(cs,length=70,mult=1.2){
+  const n=cs.length;
+  const out={zlema:new Array(n).fill(null),vol:new Array(n).fill(null),
+             trend:new Array(n).fill(null),basis:new Array(n).fill(null)};
+  if(n<length+2)return out;
+  const src=cs.map(c=>c.c);
+  const lag=Math.floor((length-1)/2);
+  const d=src.map((v,i)=> i>=lag ? v+(v-src[i-lag]) : v);
+  const zl=ema(d,length);                       // zero-lag EMA
+  // Wilder ATR series
+  const atrA=new Array(n).fill(null);let pa=null;
+  for(let i=1;i<n;i++){const tr=Math.max(cs[i].h-cs[i].l,Math.abs(cs[i].h-cs[i-1].c),Math.abs(cs[i].l-cs[i-1].c));
+    pa=pa==null?tr:(pa*(length-1)+tr)/length; atrA[i]= i>=length? pa : null;}
+  // highest ATR over length*3, then × mult
+  const win=length*3;
+  let trend=0;
+  for(let i=0;i<n;i++){
+    if(zl[i]==null||atrA[i]==null){out.zlema[i]=zl[i];continue;}
+    let hi=0;for(let k=Math.max(0,i-win+1);k<=i;k++){if(atrA[k]!=null&&atrA[k]>hi)hi=atrA[k];}
+    const v=hi*mult;
+    if(i>0 && src[i]>zl[i]+v && src[i-1]<=zl[i-1]+(out.vol[i-1]??v)) trend=1;
+    else if(i>0 && src[i]<zl[i]-v && src[i-1]>=zl[i-1]-(out.vol[i-1]??v)) trend=-1;
+    out.zlema[i]=zl[i];out.vol[i]=v;out.trend[i]=trend;
+  }
+  return out;
+}
 function impulseMACD(cs,length=34,signal=9){
   const high=cs.map(c=>c.h),low=cs.map(c=>c.l),src=cs.map(c=>(c.h+c.l+c.c)/3);
   const hi=smma(high,length),lo=smma(low,length),mi=zlema(src,length);
@@ -1140,17 +1174,26 @@ function analyze(cs){
   // SuperTrend (LuxAlgo 10/3) — used as a soft trend filter
   const st=superTrend(cs,10,3); const stDir=st.dir[i]; const stLine=st.line[i];
   const stUp=stDir===1, stFlip = i>0 && st.dir[i]!=null && st.dir[i-1]!=null && st.dir[i]!==st.dir[i-1];
+  // Zero Lag Trend Signals (AlgoAlpha 70/1.2)
+  const zlt=zeroLag(cs,70,1.2); const zlDir=zlt.trend[i];
+  const zlUp=zlDir===1, zlFlip = i>0 && zlt.trend[i]!=null && zlt.trend[i-1]!=null && zlt.trend[i]!==zlt.trend[i-1];
   // market volume: current vs 20-bar average
   const vols=cs.map(c=>c.v||0);let vsum=0,vc=0;for(let k=Math.max(0,vols.length-20);k<vols.length;k++){vsum+=vols[k];vc++;}
   const volAvg=vc?vsum/vc:0, volNow=vols[vols.length-1]||0, volRatio=volAvg?volNow/volAvg:1;
   let score=0;const reasons=[];
-  if(zoneUp===true){score+=2;reasons.push('GREEN zone (MA9 > MA21)');}else if(zoneUp===false){score-=2;reasons.push('RED zone (MA9 < MA21)');}
-  if(macdUp===true){score+=2;reasons.push('Impulse MACD above signal');}else if(macdUp===false){score-=2;reasons.push('Impulse MACD below signal');}
-  if(crossUp){score+=1;reasons.push('fresh bullish MACD cross');}
-  if(crossDn){score-=1;reasons.push('fresh bearish MACD cross');}
+  /* ===== CORE BRAIN: Zero Lag Trend (AlgoAlpha) drives direction ===== */
   let action='HOLD',cls='hold';
-  if(zoneUp===true&&macdUp===true){action='BUY';cls='buy';}
-  else if(zoneUp===false&&macdUp===false){action='SELL';cls='sell';}
+  if(zlUp===true){action='BUY';cls='buy';reasons.push('Zero Lag Trend bullish (core)');}
+  else if(zlUp===false){action='SELL';cls='sell';reasons.push('Zero Lag Trend bearish (core)');}
+  // confirmations contribute to the score (not the entry decision)
+  if(action!=='HOLD'){
+    const want=action==='BUY';
+    if(zoneUp===want){score+=2;reasons.push('EMA 9/21 confirms');}else if(zoneUp===!want){score-=2;reasons.push('EMA 9/21 disagrees');}
+    if(macdUp===want){score+=2;reasons.push('Impulse MACD confirms');}else if(macdUp===!want){score-=1;reasons.push('Impulse MACD disagrees');}
+    if((want&&crossUp)||(!want&&crossDn)){score+=1;reasons.push('fresh MACD cross');}
+    if((want&&stUp)||(!want&&stUp===false)){score+=2;reasons.push('SuperTrend confirms');}
+    if(zlFlip){score+=1;reasons.push('fresh Zero Lag flip');}
+  }
   const aligned=(action!=='HOLD');
 
   /* ----- CONFIDENCE ENGINE (0-100) -----
@@ -1167,12 +1210,15 @@ function analyze(cs){
   const h0=m.sh[i]||0,h3=m.sh[Math.max(0,i-3)]||0;
   let momRaw=(h0-h3)/histMax; if(action==='SELL')momRaw=-momRaw;
   const momentum=Math.max(0,Math.min(1,(momRaw+0.3)/0.9));                               // 0..1
-  const factors={macdStrength,emaSep,trendCons,momentum,htf:null};
+  // Zero-Lag core strength: how far price sits beyond the band (conviction)
+  const zlConv = (zlt.vol[i] && zlt.zlema[i]!=null) ? Math.min(1, Math.abs(last.c-zlt.zlema[i])/(zlt.vol[i]*1.5)) : 0;
+  const factors={macdStrength,emaSep,trendCons,momentum,zlConv,htf:null};
   let conf;
   if(aligned){
-    // weighted blend -> 55..97
-    const blend=0.30*macdStrength+0.22*emaSep+0.20*trendCons+0.18*momentum+0.10*(crossUp||crossDn?1:0);
-    conf=Math.round(55+blend*42);
+    // Zero Lag is the CORE (35%); confirmations fill the rest
+    const blend=0.35*zlConv+0.18*macdStrength+0.15*emaSep+0.16*trendCons+0.16*momentum;
+    conf=Math.round(58+blend*40);
+    if(zlFlip)conf+=2; // small boost on a fresh core flip
   }else{
     conf=Math.round(35+20*Math.abs(score)/2);
   }
@@ -1233,7 +1279,7 @@ function analyze(cs){
     rsi:r,zoneUp,macdUp,crossUp,crossDn,action,cls,aligned,conf,reasons,hi,lo,vol,atr:a14,plan,
     volNow,volAvg,volRatio,factors,trendLabel,momLabel,
     ema9Slope,ema21Slope,slopeStrength,regime,atrCat,atrPct,structure,structAgree,
-    distRes,distSup,srRisk,stUp,stLine,stFlip,series:{ma9,ma21,m,st}};
+    distRes,distSup,srRisk,stUp,stLine,stFlip,zlUp,zlFlip,series:{ma9,ma21,m,st,zlt}};
 }
 
 /* ============================================================
@@ -1401,16 +1447,19 @@ async function discoverLessons(){
 function enrichSignal(p,a){
   if(!a.aligned)return a;
   let conf=a.conf;const why=[];const want=a.action==='BUY'?'bull':'bear';
-  // base reasons (always true for an aligned signal)
-  why.push([true,`Impulse MACD ${a.macdUp?'bullish':'bearish'}`]);
-  why.push([true,`EMA 9 ${a.zoneUp?'above':'below'} EMA 21`]);
-  why.push([a.slopeStrength>0.3,`${a.slopeStrength>0.3?'Strong':'Weak'} EMA slope`]);
-  // SuperTrend (LuxAlgo 10/3) filter — strong agreement boost, disagreement penalty
+  // CORE: Zero Lag Trend is the brain that fired this signal
+  why.push([true,`⚡ Zero Lag Trend ${a.zlUp?'bullish':'bearish'} (CORE)`+(a.zlFlip?' — fresh flip':'')]);
+  // confirmations — agreement boosts conviction, disagreement trims it
   const stWant = a.action==='BUY'? a.stUp===true : a.stUp===false;
   if(a.stUp!=null){
-    if(stWant){conf+=8;why.push([true,'SuperTrend confirms'+(a.stFlip?' (fresh flip)':'')]);}
-    else{conf-=12;why.push([false,'SuperTrend disagrees']);}
+    if(stWant){conf+=7;why.push([true,'SuperTrend confirms']);}
+    else{conf-=9;why.push([false,'SuperTrend disagrees']);}
   }
+  const emaWant = a.action==='BUY'? a.zoneUp===true : a.zoneUp===false;
+  if(emaWant){conf+=5;why.push([true,'EMA 9/21 confirms']);}else{conf-=6;why.push([false,'EMA 9/21 disagrees']);}
+  const macdWant = a.action==='BUY'? a.macdUp===true : a.macdUp===false;
+  if(macdWant){conf+=5;why.push([true,'Impulse MACD confirms']);}else{conf-=5;why.push([false,'Impulse MACD disagrees']);}
+  why.push([a.slopeStrength>0.3,`${a.slopeStrength>0.3?'Strong':'Weak'} EMA slope`]);
   // higher timeframe confirmation (soft)
   const h4=htfBias(p,TFS.find(t=>t.id==='4H')), d1=htfBias(p,TFS.find(t=>t.id==='1D'));
   if(h4===want){conf+=7;why.push([true,'H4 trend confirms']);}
@@ -1473,11 +1522,13 @@ const OVERLAYS={
   sd:JSON.parse(localStorage.getItem('fm_ov_sd')??'true'),
   liq:JSON.parse(localStorage.getItem('fm_ov_liq')??'false'),
   ma:JSON.parse(localStorage.getItem('fm_ov_ma')??'true'),
-  st:JSON.parse(localStorage.getItem('fm_ov_st')??'true')
+  st:JSON.parse(localStorage.getItem('fm_ov_st')??'true'),
+  zl:JSON.parse(localStorage.getItem('fm_ov_zl')??'true')
 };
 const OVDEFS=[
   {id:'ma',label:'MA Zone 9/21',color:'#2dd4bf'},
   {id:'st',label:'SuperTrend',color:'#22c55e'},
+  {id:'zl',label:'Zero Lag Trend',color:'#00ffbb'},
   {id:'fvg',label:'Fair Value Gaps',color:'#a78bfa'},
   {id:'sd',label:'Supply / Demand',color:'#5b8cff'},
   {id:'liq',label:'Liquidity',color:'#ffce4a'}
@@ -1725,6 +1776,13 @@ function drawChart(cs,a){
     for(let k=Math.max(1,vs);k<ve;k++){if(sl[k]==null||sl[k-1]==null)continue;
       x.beginPath();x.moveTo(px(k-1),py(sl[k-1]));x.lineTo(px(k),py(sl[k]));
       x.strokeStyle=sd[k]===1?'#22c55e':'#ff5a72';x.lineWidth=2;x.stroke();}}
+  // Zero Lag Trend basis (AlgoAlpha) — teal up / red down, with flip ▲▼ markers
+  if(OVERLAYS.zl&&a.series.zlt){const zl=a.series.zlt.zlema,zt=a.series.zlt.trend,zv=a.series.zlt.vol;
+    for(let k=Math.max(1,vs);k<ve;k++){if(zl[k]==null||zl[k-1]==null)continue;
+      x.beginPath();x.moveTo(px(k-1),py(zl[k-1]));x.lineTo(px(k),py(zl[k]));
+      x.strokeStyle=zt[k]===1?'#00ffbb':'#ff1100';x.lineWidth=1.6;x.stroke();
+      if(zt[k]!=null&&zt[k-1]!=null&&zt[k]!==zt[k-1]){const up=zt[k]===1;const yy=py(zl[k]+(up?-1:1)*(zv[k]||0));
+        x.fillStyle=up?'#00ffbb':'#ff1100';x.font='10px Inter';x.textAlign='center';x.fillText(up?'▲':'▼',px(k),yy+(up?12:-4));x.textAlign='left';}}}
   if(a.plan){const dash=(v,color,lbl)=>{const y=py(v);x.setLineDash([5,4]);x.strokeStyle=color;x.lineWidth=1;x.beginPath();x.moveTo(pad.l,y);x.lineTo(W-pad.r,y);x.stroke();x.setLineDash([]);x.fillStyle=color;x.font='9px Inter';x.fillText(lbl,pad.l+2,y-2);};
     if(a.plan.tp2<=max&&a.plan.tp2>=min)dash(a.plan.tp2,'#2ee6a0','TP2');
     dash(a.plan.tp1,'#2ee6a0','TP1');dash(a.plan.sl,'#ff5a72','SL');}
@@ -1852,9 +1910,9 @@ $('toggles').onclick=e=>{
 function setStatus(){
   $('statusDot').className='dot '+(LIVE?'live':'sim');
   $('statusText').textContent=LIVE?'Live':'Sim';
-  const aiTxt=SERVER.hasAI?'Gemini AI':'Local AI';
-  $('subTitle').textContent=`${aiTxt} · Zone 9/21 + Impulse 34/9`;
-  const am=$('aiMode');if(am)am.textContent=SERVER.hasAI?'Gemini · ask anything':'Local mode';
+  const prov=SERVER.provider==='nvidia'?'NVIDIA AI':SERVER.provider==='gemini'?'Gemini AI':'Local AI';
+  $('subTitle').textContent=`${prov} · Zero Lag core + confirmations`;
+  const am=$('aiMode');if(am)am.textContent=SERVER.hasAI?(prov+' · ask anything'):'Local mode';
 }
 
 /* ---------- Alerts ---------- */
@@ -2116,11 +2174,25 @@ async function send(){
     discoveredLessons:KNOWLEDGE.filter(k=>!k.seeded).slice(0,6).map(k=>k.description),
     highImpactUSDevents:CALENDAR&&CALENDAR.highImpactUSD?CALENDAR.highImpactUSD:[]};
   let text;
-  if(SERVER.hasAI){
+  // Always try the backend AI first (don't rely only on the cached status flag).
+  let usedAI=false, reason='';
+  try{
     const j=await api('/api/chat',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({message:v,context,history:CHAT_HISTORY.slice(-6)})});
-    text=j&&j.live?j.text:localChat(v);
-  } else text=localChat(v);
+    if(j&&j.live&&j.text){ text=j.text; usedAI=true; SERVER.hasAI=true; setStatus(); }
+    else { reason=(j&&j.reason)||'unreachable'; }
+  }catch(e){ reason='network'; }
+  if(!usedAI){
+    text=localChat(v);
+    // explain the REAL reason instead of wrongly telling the user to add a key
+    if(/no_gemini_key/.test(reason)){
+      text='⚠️ The server has no Gemini key loaded. Make sure GEMINI_API_KEY is set in your .env (or the server fallback), then restart with `npm start`.\n\n'+text;
+    } else if(reason && reason!=='unreachable' && reason!=='network'){
+      text='⚠️ AI is busy right now ('+reason.slice(0,90)+'). Showing a local answer — try again in a moment.\n\n'+text;
+    } else if(reason==='network'||reason==='unreachable'){
+      text='⚠️ Can\'t reach the AI server. Are you opening the app via http://localhost:3000 (server running), not the file directly?\n\n'+text;
+    }
+  }
   typing.remove();
   const m=pushMsg(text,'bot');
   CHAT_HISTORY.push({role:'user',text:v},{role:'assistant',text});
@@ -2181,7 +2253,7 @@ function localChat(q){
   if(a&&(pairMentioned||/analy|analyse|analyze|outlook|view on|chart|setup|how.*looking|what.*think/.test(t)))
     return `📊 **${sym(p)} ${tf.label}** @ ${px}\n• Signal: **${a.action}** (${a.conf}%)\n• Zone: ${a.zoneUp?'🟢 bull':'🔴 bear'} · MACD ${a.md?.toFixed(2)}/${a.sb?.toFixed(2)}\n• RSI ${a.rsi.toFixed(0)} · ATR vol ${a.vol.toFixed(2)}%${a.plan?`\n• Plan: ${fmt(a.plan.entry,p)} / SL ${fmt(a.plan.sl,p)} / TP ${fmt(a.plan.tp1,p)}`:''}`;
   // friendly conversational catch-all (no longer forces a price box)
-  return `I'm not 100% sure I caught that, but I'm happy to help! 😊 You can ask me to:\n• **Analyze** a pair (e.g. "analyze gold", "how's EUR/USD?")\n• Explain a concept ("what is leverage?", "how do I manage risk?")\n• Today's **brief**, **session**, **patterns**, or the **plan**\n\n💡 *Tip: add your Gemini API key (npm run setup) and I can answer any question freely, in full conversational detail.*`;
+  return `I'm not 100% sure I caught that, but I'm happy to help! 😊 You can ask me to:\n• **Analyze** a pair (e.g. "analyze gold", "how's EUR/USD?")\n• Explain a concept ("what is leverage?", "how do I manage risk?")\n• Today's **brief**, **session**, **patterns**, or the **plan**`;
 }
 $('sendBtn').onclick=send;$('chatInput').onkeydown=e=>{if(e.key==='Enter')send();};
 
@@ -2860,7 +2932,7 @@ setInterval(async()=>{
   updateVoiceBtn();
   renderToggles();
   const st=await api('/api/status');
-  if(st&&st.ok)SERVER={hasMarketData:!!st.hasMarketData,hasAI:!!st.hasAI,hasEmail:!!st.hasEmail,alertTo:st.alertTo};
+  if(st&&st.ok)SERVER={hasMarketData:!!st.hasMarketData,hasAI:!!st.hasAI,provider:st.provider,hasEmail:!!st.hasEmail,alertTo:st.alertTo};
   updateMailBtn();
   pushMsg("👋 Welcome to **ForexMind** — your AI trading desk! Now with **email alerts** 📧, a **zoomable/pannable chart**, **market sessions & killzones**, **multi-timeframe trend**, **drawing tools**, **candlestick patterns**, a **risk calculator**, voice & live signals. Ask me anything.",'bot');
   fillPairSelects();

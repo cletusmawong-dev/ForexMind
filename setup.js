@@ -57,7 +57,8 @@ function writeEnv(env) {
 # Market data — https://twelvedata.com (Dashboard -> API Keys)
 TWELVE_DATA_KEY=${env.TWELVE_DATA_KEY || ''}
 
-# AI (Google Gemini) — https://aistudio.google.com/app/apikey
+# AI — NVIDIA (recommended) https://build.nvidia.com  OR  Gemini https://aistudio.google.com/app/apikey
+NVIDIA_API_KEY=${env.NVIDIA_API_KEY || ''}
 GEMINI_API_KEY=${env.GEMINI_API_KEY || ''}
 
 # Gmail notifications — App Password from https://myaccount.google.com/apppasswords
@@ -66,6 +67,7 @@ GMAIL_APP_PASSWORD=${env.GMAIL_APP_PASSWORD || ''}
 ALERT_TO=${env.ALERT_TO || 'cletusmawa@gmail.com'}
 
 # Optional settings
+NVIDIA_MODEL=${env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct'}
 GEMINI_MODEL=${env.GEMINI_MODEL || 'gemini-2.5-flash'}
 PORT=${env.PORT || '3000'}
 `;
@@ -95,11 +97,19 @@ async function main() {
   if (td) env.TWELVE_DATA_KEY = td;
   say();
 
-  // --- Gemini ---
-  say(`${C.bold}2) AI — Google Gemini${C.reset}`);
-  say(`   ${C.dim}Free key: ${C.blue}https://aistudio.google.com/app/apikey${C.reset}${C.dim} → Create API key${C.reset}`);
+  // --- AI: NVIDIA (recommended) ---
+  say(`${C.bold}2) AI — NVIDIA${C.reset} ${C.dim}(recommended)${C.reset}`);
+  say(`   ${C.dim}Free key (starts with "nvapi-"): ${C.blue}https://build.nvidia.com${C.reset}${C.dim} → pick a model → Get API Key${C.reset}`);
+  if (env.NVIDIA_API_KEY) say(`   Current: ${C.green}${mask(env.NVIDIA_API_KEY)}${C.reset}`);
+  const nv = await ask(`   ${C.cyan}Paste NVIDIA_API_KEY (ENTER to skip) ▸ ${C.reset}`);
+  if (nv) env.NVIDIA_API_KEY = nv;
+  say();
+
+  // --- AI: Gemini (alternative) ---
+  say(`${C.bold}   …or Google Gemini${C.reset} ${C.dim}(only used if no NVIDIA key)${C.reset}`);
+  say(`   ${C.dim}Free key (starts with "AIza"): ${C.blue}https://aistudio.google.com/app/apikey${C.reset}`);
   if (env.GEMINI_API_KEY) say(`   Current: ${C.green}${mask(env.GEMINI_API_KEY)}${C.reset}`);
-  const gm = await ask(`   ${C.cyan}Paste GEMINI_API_KEY ▸ ${C.reset}`);
+  const gm = await ask(`   ${C.cyan}Paste GEMINI_API_KEY (ENTER to skip) ▸ ${C.reset}`);
   if (gm) env.GEMINI_API_KEY = gm;
   say();
 
@@ -128,7 +138,7 @@ async function main() {
   say();
   say(`  ${C.bold}Status:${C.reset}`);
   say(`   • Market data: ${env.TWELVE_DATA_KEY ? C.green+'ENABLED (live)' : C.yellow+'empty → simulated data'}${C.reset}`);
-  say(`   • Gemini AI:   ${env.GEMINI_API_KEY ? C.green+'ENABLED' : C.yellow+'empty → local AI fallback'}${C.reset}`);
+  say(`   • AI:          ${env.NVIDIA_API_KEY ? C.green+'NVIDIA ENABLED' : env.GEMINI_API_KEY ? C.green+'Gemini ENABLED' : C.yellow+'none → local fallback'}${C.reset}`);
   say(`   • Email alerts:${env.GMAIL_USER && env.GMAIL_APP_PASSWORD ? C.green+' ENABLED → '+(env.ALERT_TO||env.GMAIL_USER) : C.yellow+' off (no Gmail app password)'}${C.reset}`);
   say();
   say(`  ${C.bold}Next step — start the app:${C.reset}`);
