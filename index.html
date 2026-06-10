@@ -767,7 +767,9 @@
     </div>
 
     <div class="card sec" data-sec="stats">
-      <h2>🧠 AI Brain</h2>
+      <h2>🧠 AI Brain
+        <button class="btn" id="exportSummary" style="padding:4px 9px;font-size:11px" title="Copy a full performance summary to share">📋 Export</button>
+      </h2>
       <div class="pad" id="brainBox"><div class="empty">The brain learns as signals close. Stats &amp; discovered lessons appear here.</div></div>
     </div>
 
@@ -1194,16 +1196,18 @@ function analyze(cs){
   const vols=cs.map(c=>c.v||0);let vsum=0,vc=0;for(let k=Math.max(0,vols.length-20);k<vols.length;k++){vsum+=vols[k];vc++;}
   const volAvg=vc?vsum/vc:0, volNow=vols[vols.length-1]||0, volRatio=volAvg?volNow/volAvg:1;
   let score=0;const reasons=[];
-  /* ===== CORE BRAIN: Zero Lag Trend signals, EMA 9/21 must AGREE =====
-     A trade is only taken when BOTH the Zero Lag core AND the EMA 9/21 zone
-     point the same way. The other indicators only adjust confidence. */
+  /* ===== CORE BRAIN: Zero Lag signals; EMA 9/21 AND Impulse MACD must AGREE =====
+     A trade is only taken when ALL THREE point the same way:
+       • Zero Lag Trend (core direction)
+       • EMA 9 vs 21 (trend confirm)
+       • Impulse MACD (momentum confirm)
+     The remaining indicators only adjust confidence. */
   let action='HOLD',cls='hold';
-  if(zlUp===true && zoneUp===true){action='BUY';cls='buy';reasons.push('Zero Lag bullish + EMA 9>21 agree (core)');}
-  else if(zlUp===false && zoneUp===false){action='SELL';cls='sell';reasons.push('Zero Lag bearish + EMA 9<21 agree (core)');}
+  if(zlUp===true && zoneUp===true && macdUp===true){action='BUY';cls='buy';reasons.push('Zero Lag + EMA 9>21 + MACD bullish (core)');}
+  else if(zlUp===false && zoneUp===false && macdUp===false){action='SELL';cls='sell';reasons.push('Zero Lag + EMA 9<21 + MACD bearish (core)');}
   // confirmations contribute to the score (not the entry decision)
   if(action!=='HOLD'){
     const want=action==='BUY';
-    if(macdUp===want){score+=2;reasons.push('Impulse MACD confirms');}else if(macdUp===!want){score-=1;reasons.push('Impulse MACD disagrees');}
     if((want&&crossUp)||(!want&&crossDn)){score+=1;reasons.push('fresh MACD cross');}
     if((want&&stUp)||(!want&&stUp===false)){score+=2;reasons.push('SuperTrend confirms');}
     if(zlFlip){score+=1;reasons.push('fresh Zero Lag flip');}
@@ -1461,17 +1465,16 @@ async function discoverLessons(){
 function enrichSignal(p,a){
   if(!a.aligned)return a;
   let conf=a.conf;const why=[];const want=a.action==='BUY'?'bull':'bear';
-  // CORE: a signal only exists when Zero Lag AND EMA 9/21 already agree
+  // CORE: a signal only exists when Zero Lag + EMA 9/21 + Impulse MACD all agree
   why.push([true,`⚡ Zero Lag Trend ${a.zlUp?'bullish':'bearish'} (CORE)`+(a.zlFlip?' — fresh flip':'')]);
   why.push([true,`EMA 9 ${a.zoneUp?'above':'below'} EMA 21 (required, agrees)`]);
+  why.push([true,`Impulse MACD ${a.macdUp?'bullish':'bearish'} (required, agrees)`]);
   // confirmations — agreement boosts conviction, disagreement trims it
   const stWant = a.action==='BUY'? a.stUp===true : a.stUp===false;
   if(a.stUp!=null){
     if(stWant){conf+=7;why.push([true,'SuperTrend confirms']);}
     else{conf-=9;why.push([false,'SuperTrend disagrees']);}
   }
-  const macdWant = a.action==='BUY'? a.macdUp===true : a.macdUp===false;
-  if(macdWant){conf+=5;why.push([true,'Impulse MACD confirms']);}else{conf-=5;why.push([false,'Impulse MACD disagrees']);}
   why.push([a.slopeStrength>0.3,`${a.slopeStrength>0.3?'Strong':'Weak'} EMA slope`]);
   // higher timeframe confirmation (soft)
   const h4=htfBias(p,TFS.find(t=>t.id==='4H')), d1=htfBias(p,TFS.find(t=>t.id==='1D'));
@@ -2663,6 +2666,57 @@ function computeStats(){
   return {closed,wins,losses,wr,wr7,wr30,wr90,avgRR,maxW,maxL,curve,byPair,byTf,bySession,pick,monthR,streak,streakType,ttTP,ttSL,sim,
     expired:SIGNALS.filter(s=>s.result==='Expired').length};
 }
+/* ----- Export full performance summary (copy-paste to analyse) ----- */
+function buildSummaryText(){
+  const S=computeStats();const pm=profitMetrics();
+  const closed=SIGNALS.filter(s=>s.status==='closed'&&(s.result==='TP Hit'||s.result==='SL Hit'||s.result==='BE/Trail'));
+  const L=[];
+  L.push('=== FOREXMIND PERFORMANCE SUMMARY ===');
+  L.push('Generated: '+new Date().toISOString());
+  L.push('Strategy: Zero Lag (core) + EMA 9/21 confirm + SuperTrend/MACD/HTF/regime/structure confidence');
+  L.push('');
+  L.push('-- OVERALL --');
+  L.push(`Total signals logged: ${SIGNALS.length}`);
+  L.push(`Closed (win/loss): ${pm.n}  | Wins: ${S.wins.length}  Losses: ${S.losses.length}  Expired: ${S.expired}`);
+  L.push(`Win rate: ${pm.wr}%   Profit factor: ${pm.pf===Infinity?'∞':pm.pf.toFixed(2)}   Expectancy: ${pm.expectancy.toFixed(2)}R/trade`);
+  L.push(`Avg R:R: 1:${pm.avgRR}   Win streak(max): ${S.maxW}   Loss streak(max): ${S.maxL}`);
+  L.push(`7d win: ${S.wr7??'—'}%  30d: ${S.wr30??'—'}%  90d: ${S.wr90??'—'}%`);
+  L.push(`Avg time to TP: ${S.ttTP??'—'}m   to SL: ${S.ttSL??'—'}m`);
+  L.push('');
+  L.push('-- BY PAIR (win% , trades) --');
+  for(const [k,v] of Object.entries(S.byPair)) L.push(`  ${k}: ${Math.round(v.w/v.t*100)}%  (${v.w}/${v.t})`);
+  L.push('-- BY TIMEFRAME --');
+  for(const [k,v] of Object.entries(S.byTf)) L.push(`  ${k}: ${Math.round(v.w/v.t*100)}%  (${v.w}/${v.t})`);
+  L.push('-- BY SESSION --');
+  for(const [k,v] of Object.entries(S.bySession)) L.push(`  ${k}: ${Math.round(v.w/v.t*100)}%  (${v.w}/${v.t})`);
+  L.push('-- BY REGIME --');
+  for(const [k,v] of Object.entries(LEARN.regime||{})) L.push(`  ${k}: ${Math.round(v.w/v.t*100)}%  (${v.w}/${v.t})`);
+  L.push('-- BY CONFIDENCE BAND --');
+  for(const [k,v] of Object.entries(LEARN.conf||{})) L.push(`  ${k}: ${Math.round(v.w/v.t*100)}%  (${v.w}/${v.t})`);
+  L.push('-- BY ATR --');
+  for(const [k,v] of Object.entries(LEARN.atr||{})) L.push(`  ${k}: ${Math.round(v.w/v.t*100)}%  (${v.w}/${v.t})`);
+  L.push('');
+  L.push('-- LAST 40 CLOSED TRADES (pair,tf,dir,result,conf,RR,regime,session,h4,d1,pips,durMin) --');
+  closed.sort((a,b)=>b.ts-a.ts).slice(0,40).forEach(s=>{
+    const rr=(Math.abs(s.tp1-s.entry)/Math.max(1e-9,Math.abs(s.entry-(s.slOrig||s.sl)))).toFixed(2);
+    L.push(`  ${s.pair},${s.timeframe},${s.action},${s.result},${s.confidence}%,1:${rr},${s.regime||'-'},${s.session||'-'},${s.h4||'-'},${s.d1||'-'},${s.pips??'-'},${s.durationMin??'-'}`);
+  });
+  L.push('');
+  L.push('-- DISCOVERED LESSONS --');
+  KNOWLEDGE.filter(k=>!k.seeded).slice(0,15).forEach(k=>L.push('  • '+k.title+' — '+k.description));
+  return L.join('\n');
+}
+$('exportSummary')?.addEventListener('click',async()=>{
+  const txt=buildSummaryText();
+  try{ await navigator.clipboard.writeText(txt); toast('📋 Summary copied','Paste it to the AI for analysis',''); }
+  catch(e){
+    // fallback: show in a prompt to copy manually
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;inset:5%;width:90%;height:80vh;z-index:99;background:#0c1322;color:#eef3fb;padding:12px;border-radius:12px';
+    document.body.appendChild(ta);ta.select();toast('📋 Select all & copy','Then close this box','');
+    ta.onblur=()=>ta.remove();
+  }
+});
+
 function renderBrain(){
   const el=$('brainBox');if(!el)return;
   const pm=profitMetrics();
@@ -2695,11 +2749,15 @@ async function renderMT5Account(){
   if(!(window.FB&&window.FB.ok))return;
   let a=null; try{a=await window.FB.getDoc('mt5_account','live');}catch(e){}
   const tag=$('mt5AcctTag');
-  if(!a||(Date.now()-(a.updated||0))>2*60*1000){
+  if(!a){
     if(tag)tag.textContent='offline';
     el.innerHTML='<div class="empty">MT5 bridge not connected (run python bridge.py on your PC).</div>';
     return;
   }
+  // freshness note (clock-independent: just show how old the data is, don't hide it)
+  const ageMs=Date.now()-(a.updated||0);
+  const ageMin=Math.max(0,Math.round(ageMs/60000));
+  const stale=ageMs>3*60*1000;
   if(tag)tag.textContent=(a.is_demo?'DEMO · ':'')+a.login;
   const prof=(a.profit||0), up=prof>=0;
   const eqUp=(a.equity||0)>=(a.balance||0);
@@ -2718,7 +2776,7 @@ async function renderMT5Account(){
       <div><div style="font-size:9px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Open P/L</div>
         <div class="${up?'up':'down'}" style="font-size:20px;font-weight:800">${up?'+':''}${prof.toFixed(2)}</div></div>
     </div>
-    <div style="font-size:11px;color:var(--muted2);margin-bottom:10px">${a.server} · free margin ${(a.free_margin||0).toFixed(2)} · ${a.open_count||0} open</div>
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:10px">${a.server} · free margin ${(a.free_margin||0).toFixed(2)} · ${a.open_count||0} open · ${stale?('<span style="color:var(--amber)">updated '+ageMin+'m ago</span>'):'live'}</div>
     ${pos?`<table><thead><tr><th>Pair</th><th>Side</th><th>Lots</th><th>Open</th><th>Now</th><th>P/L</th></tr></thead><tbody>${pos}</tbody></table>`
         :'<div class="empty">No open positions right now.</div>'}`;
 }
@@ -2957,7 +3015,7 @@ setInterval(async()=>{
 }, 60*1000);
 
 /* ---------- Init ---------- */
-const APP_VERSION='v7-mt5';   // bump this each deploy to confirm what's live
+const APP_VERSION='v10-mt5';   // bump this each deploy to confirm what's live
 (async function(){
   const vt=$('verTag');if(vt)vt.textContent=APP_VERSION;
   updateVoiceBtn();
