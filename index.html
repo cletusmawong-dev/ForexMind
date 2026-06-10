@@ -883,6 +883,10 @@
         return snap.docs.map(d=>({id:d.id,...d.data()}));
       }catch(e){console.warn('list fallback',e.message);return LS.list(col);}
     },
+    async getDoc(col,id){
+      if(!ok)return null;
+      try{const snap=await M.getDoc(M.doc(db,col,id));return snap.exists()?snap.data():null;}catch(e){return null;}
+    },
     async update(col,id,patch){
       if(!ok)return LS.update(col,id,patch);
       try{await M.updateDoc(M.doc(db,col,id),patch);}catch(e){LS.update(col,id,patch);}
@@ -917,6 +921,7 @@ const TFS=[{id:'5m',label:'5m',min:5},{id:'15m',label:'15m',min:15},
 const N=90;
 let SERVER={hasMarketData:false,hasAI:false,hasEmail:false,alertTo:null};
 let LIVE=false;
+let MT5_FEED=false;
 let current=PAIRS[0], tf=TFS[0];
 const cache={};
 const lastSignal={};
@@ -1058,6 +1063,17 @@ async function api(path,opts){
 async function getCandles(p,t){
   const k=key(p)+'_'+t.id;
   if(cache[k])return cache[k];
+  // 1) MT5 bridge candles from Firestore (real broker data) take priority
+  if(window.FB && window.FB.ok){
+    try{
+      const doc=await window.FB.getDoc('mt5_candles', sym(p).replace('/','_')+'_'+t.id);
+      if(doc && doc.candles && doc.candles.length>25 && (Date.now()-(doc.updated||0))<10*60*1000){
+        LIVE=true; MT5_FEED=true;
+        return cache[k]=withVol(doc.candles.map(c=>({t:new Date(c.t),o:c.o,h:c.h,l:c.l,c:c.c,v:c.v})));
+      }
+    }catch(e){}
+  }
+  // 2) Twelve Data via backend
   if(SERVER.hasMarketData){
     const j=await api(`/api/candles?symbol=${encodeURIComponent(sym(p))}&tf=${t.id}&size=${N}`);
     if(j&&j.live&&j.candles&&j.candles.length>25){
@@ -1065,6 +1081,7 @@ async function getCandles(p,t){
       return cache[k]=withVol(j.candles.map(c=>({t:new Date(c.t),o:c.o,h:c.h,l:c.l,c:c.c,v:c.v})));
     }
   }
+  // 3) simulated fallback
   return cache[k]=synth(p,t);
 }
 function synth(p,t){
@@ -1181,14 +1198,15 @@ function analyze(cs){
   const vols=cs.map(c=>c.v||0);let vsum=0,vc=0;for(let k=Math.max(0,vols.length-20);k<vols.length;k++){vsum+=vols[k];vc++;}
   const volAvg=vc?vsum/vc:0, volNow=vols[vols.length-1]||0, volRatio=volAvg?volNow/volAvg:1;
   let score=0;const reasons=[];
-  /* ===== CORE BRAIN: Zero Lag Trend (AlgoAlpha) drives direction ===== */
+  /* ===== CORE BRAIN: Zero Lag Trend signals, EMA 9/21 must AGREE =====
+     A trade is only taken when BOTH the Zero Lag core AND the EMA 9/21 zone
+     point the same way. The other indicators only adjust confidence. */
   let action='HOLD',cls='hold';
-  if(zlUp===true){action='BUY';cls='buy';reasons.push('Zero Lag Trend bullish (core)');}
-  else if(zlUp===false){action='SELL';cls='sell';reasons.push('Zero Lag Trend bearish (core)');}
+  if(zlUp===true && zoneUp===true){action='BUY';cls='buy';reasons.push('Zero Lag bullish + EMA 9>21 agree (core)');}
+  else if(zlUp===false && zoneUp===false){action='SELL';cls='sell';reasons.push('Zero Lag bearish + EMA 9<21 agree (core)');}
   // confirmations contribute to the score (not the entry decision)
   if(action!=='HOLD'){
     const want=action==='BUY';
-    if(zoneUp===want){score+=2;reasons.push('EMA 9/21 confirms');}else if(zoneUp===!want){score-=2;reasons.push('EMA 9/21 disagrees');}
     if(macdUp===want){score+=2;reasons.push('Impulse MACD confirms');}else if(macdUp===!want){score-=1;reasons.push('Impulse MACD disagrees');}
     if((want&&crossUp)||(!want&&crossDn)){score+=1;reasons.push('fresh MACD cross');}
     if((want&&stUp)||(!want&&stUp===false)){score+=2;reasons.push('SuperTrend confirms');}
@@ -1447,16 +1465,15 @@ async function discoverLessons(){
 function enrichSignal(p,a){
   if(!a.aligned)return a;
   let conf=a.conf;const why=[];const want=a.action==='BUY'?'bull':'bear';
-  // CORE: Zero Lag Trend is the brain that fired this signal
+  // CORE: a signal only exists when Zero Lag AND EMA 9/21 already agree
   why.push([true,`⚡ Zero Lag Trend ${a.zlUp?'bullish':'bearish'} (CORE)`+(a.zlFlip?' — fresh flip':'')]);
+  why.push([true,`EMA 9 ${a.zoneUp?'above':'below'} EMA 21 (required, agrees)`]);
   // confirmations — agreement boosts conviction, disagreement trims it
   const stWant = a.action==='BUY'? a.stUp===true : a.stUp===false;
   if(a.stUp!=null){
     if(stWant){conf+=7;why.push([true,'SuperTrend confirms']);}
     else{conf-=9;why.push([false,'SuperTrend disagrees']);}
   }
-  const emaWant = a.action==='BUY'? a.zoneUp===true : a.zoneUp===false;
-  if(emaWant){conf+=5;why.push([true,'EMA 9/21 confirms']);}else{conf-=6;why.push([false,'EMA 9/21 disagrees']);}
   const macdWant = a.action==='BUY'? a.macdUp===true : a.macdUp===false;
   if(macdWant){conf+=5;why.push([true,'Impulse MACD confirms']);}else{conf-=5;why.push([false,'Impulse MACD disagrees']);}
   why.push([a.slopeStrength>0.3,`${a.slopeStrength>0.3?'Strong':'Weak'} EMA slope`]);
@@ -1909,9 +1926,9 @@ $('toggles').onclick=e=>{
 };
 function setStatus(){
   $('statusDot').className='dot '+(LIVE?'live':'sim');
-  $('statusText').textContent=LIVE?'Live':'Sim';
+  $('statusText').textContent=MT5_FEED?'MT5 Live':(LIVE?'Live':'Sim');
   const prov=SERVER.provider==='nvidia'?'NVIDIA AI':SERVER.provider==='gemini'?'Gemini AI':'Local AI';
-  $('subTitle').textContent=`${prov} · Zero Lag core + confirmations`;
+  $('subTitle').textContent=`${prov} · Zero Lag + EMA 9/21 core`;
   const am=$('aiMode');if(am)am.textContent=SERVER.hasAI?(prov+' · ask anything'):'Local mode';
 }
 

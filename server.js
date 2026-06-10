@@ -27,7 +27,8 @@ const TD_KEY = process.env.TWELVE_DATA_KEY || '';
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 // NVIDIA NIM (OpenAI-compatible) — get a free key (starts with "nvapi-") at https://build.nvidia.com
-const NVIDIA_KEY = process.env.NVIDIA_API_KEY || '';
+// NOTE: baked-in key is a TESTING fallback; your .env / host NVIDIA_API_KEY takes priority. Replace before real use.
+const NVIDIA_KEY = process.env.NVIDIA_API_KEY || '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';
 const NVIDIA_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct';
 const AI_PROVIDER = NVIDIA_KEY ? 'nvidia' : (GEMINI_KEY ? 'gemini' : 'none');
 const HAS_AI = AI_PROVIDER !== 'none';
@@ -214,8 +215,11 @@ const TRADING_SYSTEM = `You are ForexMind — an elite AI trading analyst and th
 
 CORE STRATEGY (this is how the platform trades):
 - The CORE signal engine is the Zero Lag Trend (AlgoAlpha, length 70, band ×1.2): a zero-lag EMA with a
-  volatility band. A bullish flip = primary BUY bias, bearish flip = primary SELL bias.
-- CONFIRMATIONS that strengthen or weaken a signal: SuperTrend (10,3), EMA 9 vs 21, Impulse MACD (34,9),
+  volatility band. A bullish flip = BUY bias, bearish flip = SELL bias.
+- ENTRY RULE: a trade is ONLY taken when the Zero Lag core AND the EMA 9/21 cross AGREE — i.e. BUY only when
+  Zero Lag is bullish AND the 9 EMA is above the 21 EMA; SELL only when Zero Lag is bearish AND the 9 EMA is
+  below the 21 EMA. If they disagree, there is NO trade.
+- CONFIRMATIONS that further strengthen or weaken confidence: SuperTrend (10,3), Impulse MACD (34,9),
   higher-timeframe (H4/D1) agreement, market regime (trending/ranging/chaotic), market structure (HH/HL vs LH/LL),
   ATR health, volume, support/resistance distance, active session/killzone, and the platform's own historical
   win-rate data for that pair/timeframe/session/setup ("similar setups").
