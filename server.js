@@ -265,12 +265,12 @@ CURRENT MARKET SESSIONS (UTC-based):
 ${JSON.stringify(sessions, null, 2)}
 
 Write a briefing with these sections:
-1) **Market Mood** — 2-3 sentences on overall risk/dollar/gold tone, factoring which session/killzone is active.
-2) **Gold (XAU/USD) focus** — what the Zone + Impulse MACD say right now and the bias.
-3) **Watch today** — the high-impact events and how they could move gold/USD.
+1) **Market Mood** — 2-3 sentences on the overall risk tone and US dollar direction, factoring which session/killzone is active. Cover the market broadly (forex majors AND gold), not just one instrument.
+2) **Top Setups** — pick the 2-4 instruments from the snapshot with the clearest aligned signals (any of the pairs or gold). For each: the bias and what the Zero Lag + EMA + Impulse MACD say. Do NOT focus only on gold — choose whatever the data shows is strongest.
+3) **Watch today** — the high-impact events and how they could move the dollar, majors and gold.
 4) **Session timing** — note the active session/killzone and the best upcoming window to trade.
-5) **Game plan** — when to look for longs vs shorts per the strategy, and a risk reminder.
-Keep it tight and skimmable.`;
+5) **Game plan** — where to look for longs vs shorts across the watchlist, and a risk reminder.
+Keep it tight and skimmable. Treat all pairs equally — gold is just one of many instruments.`;
     const text = await callGemini(TRADING_SYSTEM, content, 900);
     res.json({ live: true, text });
   } catch (e) {

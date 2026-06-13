@@ -37,7 +37,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{col}/{doc} {
-      allow read, write: if col in ['signals','alerts','journal','knowledge_base','mt5_candles','mt5_account'];
+      allow read, write: if col in ['signals','alerts','journal','knowledge_base','mt5_candles','mt5_account','settings'];
     }
   }
 }

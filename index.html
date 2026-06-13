@@ -6,25 +6,25 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#070b14" />
+<meta name="theme-color" content="#160f1d" />
 <title>ForexMind — AI Trading Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* refined slate-blue institutional theme (lighter, professional) */
-    --bg:#0e1626; --bg2:#142035;
-    --panel:rgba(255,255,255,.07); --panel-solid:#1a2740; --panel2:rgba(255,255,255,.05);
-    --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.07);
-    --text:#eef3fb; --muted:#b3c2dd; --muted2:#8294b4;
-    --accent:#5e9bff; --accent2:#34d9c8; --violet:#a98bff;
-    --green:#2fdca0; --red:#ff6483; --amber:#ffc24a; --gold:#ffd24d;
-    --grad:linear-gradient(135deg,#5e9bff 0%,#48c6e8 55%,#34d9c8 100%);
-    --grad-violet:linear-gradient(135deg,#a98bff,#5e9bff);
-    --shadow:0 22px 50px -18px rgba(6,12,24,.55);
-    --glow:0 0 0 1px rgba(94,155,255,.25),0 10px 30px -8px rgba(94,155,255,.35);
-    --blur:saturate(170%) blur(26px);
+    /* ☀️ "Sunset Ember" — warm plum-black with coral, amber & magenta accents */
+    --bg:#160f1d; --bg2:#221530;
+    --panel:rgba(255,255,255,.05); --panel-solid:#241830; --panel2:rgba(255,255,255,.04);
+    --line:rgba(255,180,160,.14); --line2:rgba(255,180,160,.07);
+    --text:#fdeee6; --muted:#d7b8c4; --muted2:#a98598;
+    --accent:#ff7a59; --accent2:#ffc14d; --violet:#ff5d9e;
+    --green:#3fe0a6; --red:#ff5571; --amber:#ffb347; --gold:#ffd24d;
+    --grad:linear-gradient(135deg,#ff5d9e 0%,#ff7a59 50%,#ffc14d 100%);
+    --grad-violet:linear-gradient(135deg,#ff5d9e,#ff7a59);
+    --shadow:0 24px 60px -20px rgba(20,4,16,.7);
+    --glow:0 0 0 1px rgba(255,122,89,.28),0 10px 30px -8px rgba(255,93,158,.4);
+    --blur:saturate(180%) blur(26px);
     --r:20px;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -39,15 +39,15 @@
   body::before{
     content:'';position:fixed;inset:0;z-index:-2;
     background:
-      radial-gradient(820px 560px at 84% -14%,rgba(94,155,255,.26),transparent 62%),
-      radial-gradient(680px 560px at -8% 2%,rgba(52,217,200,.18),transparent 58%),
-      radial-gradient(640px 500px at 104% 60%,rgba(169,139,255,.16),transparent 58%),
-      radial-gradient(900px 680px at 50% 128%,rgba(72,198,232,.14),transparent 58%),
-      linear-gradient(180deg,#101a2c 0%,#0e1626 55%,#0c1322 100%);
+      radial-gradient(820px 560px at 84% -14%,rgba(255,93,158,.30),transparent 62%),
+      radial-gradient(680px 560px at -8% 2%,rgba(255,122,89,.22),transparent 58%),
+      radial-gradient(640px 500px at 104% 60%,rgba(255,193,77,.16),transparent 58%),
+      radial-gradient(900px 680px at 50% 128%,rgba(255,93,113,.16),transparent 58%),
+      linear-gradient(180deg,#1c1126 0%,#160f1d 55%,#120a16 100%);
   }
   body::after{
     content:'';position:fixed;inset:-50%;z-index:-1;opacity:.5;
-    background:conic-gradient(from 0deg at 50% 50%,transparent,rgba(94,155,255,.06),transparent,rgba(52,217,200,.06),transparent,rgba(169,139,255,.05),transparent);
+    background:conic-gradient(from 0deg at 50% 50%,transparent,rgba(255,93,158,.07),transparent,rgba(255,122,89,.06),transparent,rgba(255,193,77,.05),transparent);
     animation:spin 60s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -85,18 +85,22 @@
   .dot.live{background:var(--green)} .dot.sim{background:var(--amber)}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,230,160,.5)}70%{box-shadow:0 0 0 6px rgba(46,230,160,0)}100%{box-shadow:0 0 0 0 rgba(46,230,160,0)}}
 
-  /* ---------- Layout ---------- */
-  .wrap{max-width:1480px;margin:0 auto;padding:18px;display:grid;
-        grid-template-columns:300px minmax(0,1fr) 380px;gap:18px;align-items:start}
-  .ai-left, .ai-col{display:flex;flex-direction:column;gap:18px;min-width:0}
-  /* keep the chart in view while the taller side columns scroll (no empty gap) */
-  @media(min-width:1101px){
-    main[data-sec="chart"]{position:sticky;top:80px;align-self:start;
-      max-height:calc(100vh - 96px);overflow-y:auto;scrollbar-width:thin}
-  }
-  @media(max-width:1280px){.wrap{grid-template-columns:280px minmax(0,1fr) 340px}}
-  @media(max-width:1100px){
-    .wrap{grid-template-columns:1fr;gap:14px;padding:14px}
+  /* ---------- Layout (TAB-BASED on laptop AND phone) ----------
+     Only the cards belonging to the active tab are shown; they flow in a
+     responsive multi-column grid so the laptop gets the same tab UX as mobile. */
+  .wrap{max-width:1440px;margin:0 auto;padding:20px;display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start}
+  /* tabs that are essentially single-purpose read better as one centered column */
+  .wrap.solo{grid-template-columns:minmax(0,860px);justify-content:center}
+  .ai-left,.ai-col{display:contents}
+  .sec{display:none}
+  .sec.active{display:block;animation:fade .3s ease}
+  .card.chat.active{display:flex}
+  /* the chart is the hero — it spans the full width of its tab and stays centered */
+  main[data-sec="chart"]{grid-column:1/-1}
+  main[data-sec="chart"]>.pad{max-width:1120px;margin:0 auto;width:100%}
+  @media(max-width:820px){
+    .wrap{grid-template-columns:1fr;gap:14px;padding:14px 12px}
   }
   .card{
     background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
@@ -121,8 +125,6 @@
   .btn:active{transform:translateY(0)}
   .btn.primary{background:var(--grad);color:#06101f;border:none;font-weight:800;box-shadow:0 6px 18px rgba(91,140,255,.4)}
   .btn.on{background:var(--grad);color:#06101f;border:none;font-weight:800}
-
-  .sec{display:block}
 
   /* ---------- Watchlist ---------- */
   .pair-row{display:flex;align-items:center;justify-content:space-between;
@@ -367,6 +369,14 @@
   .layout-sel:focus{border-color:var(--accent)}
 
   /* ---------- Risk calculator ---------- */
+  .setpanel{display:flex;flex-direction:column;gap:11px}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+  .setrow span{color:var(--text)}
+  .setrow select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 9px;border-radius:9px;font-size:12px;outline:none}
+  .setrow input[type=checkbox]{width:42px;height:24px;appearance:none;-webkit-appearance:none;background:rgba(120,140,180,.25);border-radius:20px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+  .setrow input[type=checkbox]:checked{background:var(--grad)}
+  .setrow input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+  .setrow input[type=checkbox]:checked::after{transform:translateX(18px)}
   .calc{padding:13px 15px;display:flex;flex-direction:column;gap:10px}
   .calc .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .calc label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);display:block;margin-bottom:4px}
@@ -390,9 +400,15 @@
   .xhair.show{display:block}
   .xhair b{color:var(--accent2)}
   .chart-host{position:relative}
-  .chart-resize{text-align:center;color:var(--muted2);font-size:14px;letter-spacing:3px;cursor:ns-resize;
-    padding:2px 0 4px;user-select:none;border-radius:8px;transition:background .2s,color .2s}
-  .chart-resize:hover{background:var(--panel2);color:var(--accent2)}
+  .chart-resize{display:flex;align-items:center;justify-content:center;gap:8px;cursor:ns-resize;
+    padding:7px 0;user-select:none;border-radius:10px;transition:background .2s,color .2s;color:var(--muted2);
+    margin:4px 0 2px;border:1px dashed transparent}
+  .chart-resize::before,.chart-resize::after{content:'';height:2px;flex:1;max-width:120px;border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--line))}
+  .chart-resize::after{background:linear-gradient(90deg,var(--line),transparent)}
+  .chart-resize .grip{font-size:13px;letter-spacing:3px;line-height:1}
+  .chart-resize:hover{background:var(--panel2);color:var(--accent2);border-color:var(--line)}
+  .chart-resize.dragging{background:var(--panel2);color:var(--accent2);border-color:var(--accent)}
 
   /* ---------- Why-this-signal panel ---------- */
   .why{display:none;margin-top:13px;border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--panel2)}
@@ -498,25 +514,31 @@
   .jcard img{max-width:100%;border-radius:9px;margin-top:8px;border:1px solid var(--line)}
   .jcard .jx{cursor:pointer;color:var(--muted2);font-size:12px}.jcard .jx:hover{color:var(--red)}
 
-  /* ---------- Mobile tab bar ---------- */
-  .tabbar{display:none}
-  @media(max-width:1100px){
-    .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;
-      background:rgba(8,12,22,.92);backdrop-filter:blur(18px) saturate(140%);border-top:1px solid var(--line);
-      padding-bottom:env(safe-area-inset-bottom,0)}
-    .tabbar button{flex:1;background:none;border:none;color:var(--muted2);padding:10px 4px 9px;
-      font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s;position:relative}
-    .tabbar button .i{font-size:19px;line-height:1}
-    .tabbar button.active{color:var(--accent2)}
+  /* ---------- Tab bar (laptop: sleek top pill bar · phone: bottom bar) ---------- */
+  .tabbar{display:flex;gap:6px;max-width:1440px;margin:14px auto 0;padding:7px;
+    background:linear-gradient(180deg,rgba(26,39,64,.62),rgba(20,32,53,.42));
+    border:1px solid var(--line);border-radius:18px;position:sticky;top:72px;z-index:35;
+    backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+    box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.08)}
+  .tabbar button{flex:1;background:none;border:none;color:var(--muted2);padding:11px 6px;
+    font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:13px;transition:all .2s;position:relative;letter-spacing:.2px}
+  .tabbar button .i{font-size:17px;line-height:1}
+  .tabbar button:hover{color:var(--text);background:rgba(255,255,255,.04)}
+  .tabbar button.active{color:#06101f;background:var(--grad);box-shadow:0 6px 18px rgba(91,140,255,.4)}
+  @media(max-width:820px){
+    .tabbar{position:fixed;bottom:0;left:0;right:0;top:auto;margin:0;border-radius:0;gap:0;padding:0;
+      border:none;border-top:1px solid var(--line);background:rgba(8,12,22,.94);
+      padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -8px 24px rgba(0,0,0,.3)}
+    .tabbar button{flex-direction:column;gap:4px;padding:9px 4px 8px;font-size:10px;border-radius:0;letter-spacing:0}
+    .tabbar button .i{font-size:19px}
+    .tabbar button:hover{background:none}
+    .tabbar button.active{color:var(--accent2);background:none;box-shadow:none}
     .tabbar button.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:26px;height:3px;border-radius:3px;background:var(--grad)}
-    .sec{display:none}
-    .sec.active{display:block}
-    .ai-left,.ai-col{display:contents}
-    .ai-left>.card,.ai-col>.card{display:none}
-    .ai-left>.card.active,.ai-col>.card.active{display:block}
-    .card.chat.active{display:flex}
     .big-px{font-size:30px}
   }
+  /* phone needs bottom clearance for the fixed bar; laptop doesn't */
+  @media(min-width:821px){ body{padding-bottom:24px} }
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-thumb{background:rgba(120,140,180,.25);border-radius:8px}
   ::-webkit-scrollbar-thumb:hover{background:rgba(120,140,180,.4)}
@@ -563,6 +585,15 @@
 
 <!-- DASHBOARD STAT TILES (full width) -->
 <div class="tiles" id="tiles"></div>
+
+<nav class="tabbar" id="tabbar">
+  <button data-tab="chart" class="active"><span class="i">📈</span>Chart</button>
+  <button data-tab="markets"><span class="i">⭐</span>Markets</button>
+  <button data-tab="signals"><span class="i">🗂️</span>Signals</button>
+  <button data-tab="ai"><span class="i">🤖</span>AI</button>
+  <button data-tab="stats"><span class="i">📊</span>Stats</button>
+  <button data-tab="folio"><span class="i">💼</span>Folio</button>
+</nav>
 
 <div class="wrap">
   <!-- LEFT -->
@@ -665,7 +696,7 @@
         <canvas id="draw" height="300" style="position:absolute;top:0;left:0;pointer-events:none"></canvas>
         <div class="xhair" id="xhair"></div>
       </div>
-      <div class="chart-resize" id="chartResize" title="Drag to resize chart height">⋯</div>
+      <div class="chart-resize" id="chartResize" title="Drag up/down to resize the chart"><span class="grip">⣿ drag to resize ⣿</span></div>
       <div class="panelLbl"><span>📊 Market Volume</span><button class="iconbtn mini" data-panel="volPanel" title="Hide / show">▾</button></div>
       <div id="volPanel"><canvas id="vol" height="64"></canvas></div>
       <div class="panelLbl"><span>IMACD_LB 34 9 — Impulse MACD</span><button class="iconbtn mini" data-panel="macdPanel" title="Hide / show">▾</button></div>
@@ -725,6 +756,68 @@
     <div class="card sec" data-sec="folio">
       <h2>💹 Live MT5 Account <span class="rr" id="mt5AcctTag"></span></h2>
       <div class="pad" id="mt5AcctBox"><div class="empty">Connect the MT5 bridge to see your real demo account here.</div></div>
+    </div>
+
+    <div class="card sec" data-sec="folio">
+      <h2>⚙️ Trading Settings <span class="rr" id="setSaved"></span></h2>
+      <div class="pad setpanel">
+        <label class="setrow"><span>🤖 Auto-trade (live orders)</span><input type="checkbox" id="setAuto"></label>
+        <label class="setrow"><span>🟡 Trade Gold (XAU/USD)</span><input type="checkbox" id="setGold"></label>
+        <label class="setrow"><span>↳ Gold only on 5m timeframe</span><input type="checkbox" id="setGold5m"></label>
+        <div class="setrow"><span>🎯 Min confidence to trade</span>
+          <select id="setConf"><option>70</option><option>75</option><option>80</option><option>85</option><option>90</option></select></div>
+        <div class="setrow"><span>💰 Risk % per trade</span>
+          <select id="setRisk"><option>0.5</option><option>1</option><option>1.5</option><option>2</option><option>3</option></select></div>
+        <div class="setrow"><span>🛑 Daily loss limit %</span>
+          <select id="setDLL"><option>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option></select></div>
+        <div class="setrow"><span>📊 Max open positions</span>
+          <select id="setMaxPos"><option>1</option><option>2</option><option>3</option><option>5</option></select></div>
+        <div class="setrow"><span>📅 Max trades per day</span>
+          <select id="setMaxDay"><option>3</option><option>5</option><option>8</option><option>10</option><option>15</option></select></div>
+        <button class="btn primary" id="setSave" style="justify-content:center;margin-top:6px">Save settings</button>
+        <div style="font-size:11px;color:var(--muted2);margin-top:6px">Changes apply to the MT5 bridge within ~30 seconds.</div>
+      </div>
+    </div>
+
+    <div class="card sec" data-sec="folio">
+      <h2>🧠 Strategy — Trend-Pullback v1 <span class="rr" id="stratSaved"></span></h2>
+      <div class="pad setpanel">
+        <div style="font-size:12px;color:var(--muted2);line-height:1.5;margin-bottom:4px">
+          Core entry = <b>Zero Lag + EMA 9/21 + Impulse MACD</b> all agree. The filters below
+          are <b>hard gates</b>: if one fails, the trade is skipped. Fewer trades, higher quality.
+        </div>
+        <div style="font-weight:700;font-size:12px;color:var(--accent);margin-top:4px">Trend filters (the edge)</div>
+        <label class="setrow"><span>🧭 Only trade WITH the 4H trend</span><input type="checkbox" id="stH4"></label>
+        <label class="setrow"><span>📅 Also require Daily trend (stricter)</span><input type="checkbox" id="stD1"></label>
+        <label class="setrow"><span>📈 Require SuperTrend agreement</span><input type="checkbox" id="stST"></label>
+        <div style="font-weight:700;font-size:12px;color:var(--accent);margin-top:6px">Market-condition gates</div>
+        <label class="setrow"><span>🚫 Skip ranging markets</span><input type="checkbox" id="stRange"></label>
+        <label class="setrow"><span>🌪️ Skip chaotic markets</span><input type="checkbox" id="stChaos"></label>
+        <label class="setrow"><span>💤 Skip low-momentum (low ATR)</span><input type="checkbox" id="stLowAtr"></label>
+        <label class="setrow"><span>🕐 Skip off-session hours</span><input type="checkbox" id="stSess"></label>
+        <div style="font-weight:700;font-size:12px;color:var(--accent);margin-top:6px">Don't chase extremes</div>
+        <label class="setrow"><span>📊 RSI exhaustion filter</span><input type="checkbox" id="stRsi"></label>
+        <div class="setrow"><span>↳ Overbought level</span>
+          <select id="stRsiOb"><option>68</option><option>70</option><option>72</option><option>75</option><option>78</option></select></div>
+        <div class="setrow"><span>↳ Oversold level</span>
+          <select id="stRsiOs"><option>22</option><option>25</option><option>28</option><option>30</option><option>32</option></select></div>
+        <div style="font-weight:700;font-size:12px;color:var(--accent);margin-top:6px">Risk &amp; reward</div>
+        <div class="setrow"><span>⚖️ Minimum reward:risk</span>
+          <select id="stMinRR"><option>1</option><option>1.2</option><option>1.5</option><option>1.8</option><option>2</option></select></div>
+        <div class="setrow"><span>🛡️ Stop size — min (× ATR)</span>
+          <select id="stSlMin"><option>0.75</option><option>1</option><option>1.25</option><option>1.5</option></select></div>
+        <div class="setrow"><span>🛡️ Stop size — max (× ATR)</span>
+          <select id="stSlMax"><option>2</option><option>2.5</option><option>3</option><option>3.5</option></select></div>
+        <div class="setrow"><span>🎯 Reward in trends (R:R)</span>
+          <select id="stRrTrend"><option>1.5</option><option>2</option><option>2.5</option><option>3</option></select></div>
+        <div class="setrow"><span>🎯 Reward in ranges (R:R)</span>
+          <select id="stRrRange"><option>1</option><option>1.3</option><option>1.5</option><option>2</option></select></div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn primary" id="stratSave" style="flex:1;justify-content:center">Save strategy</button>
+          <button class="btn" id="stratReset" style="justify-content:center">Reset</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted2);margin-top:4px">Strict = fewer, higher-quality trades. Loose = more trades, more noise.</div>
+      </div>
     </div>
 
     <div class="card sec" data-sec="folio">
@@ -811,15 +904,6 @@
   ForexMind · your personal AI trading desk — Zone MA (9/21) + Impulse MACD (34/9), multi-timeframe trend, smart-money overlays & live signals.
 </p>
 
-<nav class="tabbar" id="tabbar">
-  <button data-tab="chart" class="active"><span class="i">📈</span>Chart</button>
-  <button data-tab="markets"><span class="i">⭐</span>Markets</button>
-  <button data-tab="signals"><span class="i">🗂️</span>Signals</button>
-  <button data-tab="ai"><span class="i">🤖</span>AI</button>
-  <button data-tab="stats"><span class="i">📊</span>Stats</button>
-  <button data-tab="folio"><span class="i">💼</span>Folio</button>
-</nav>
-
 <div class="modal" id="briefModal">
   <div class="box">
     <h2>
@@ -882,8 +966,12 @@
       }catch(e){console.warn('list fallback',e.message);return LS.list(col);}
     },
     async getDoc(col,id){
-      if(!ok)return null;
+      if(!ok){const a=LS.list(col);return a.find(x=>x.id===id)||null;}
       try{const snap=await M.getDoc(M.doc(db,col,id));return snap.exists()?snap.data():null;}catch(e){return null;}
+    },
+    async setDoc(col,id,obj){
+      if(!ok){localStorage.setItem('fbls_doc_'+col+'_'+id,JSON.stringify(obj));return;}
+      try{await M.setDoc(M.doc(db,col,id),obj);}catch(e){console.warn('setDoc',e.message);}
     },
     async update(col,id,patch){
       if(!ok)return LS.update(col,id,patch);
@@ -1288,10 +1376,26 @@ function analyze(cs){
   const hi=Math.max(...cs.map(c=>c.h)),lo=Math.min(...cs.map(c=>c.l));
   let plan=null;
   if(aligned){
-    const entry=last.c, slDist=1.5*a14;
-    if(action==='BUY'){plan={entry,sl:entry-slDist,tp1:entry+slDist*1.5,tp2:entry+slDist*3};}
-    else{plan={entry,sl:entry+slDist,tp1:entry-slDist*1.5,tp2:entry-slDist*3};}
-    plan.risk=Math.abs(entry-plan.sl);plan.rr1=1.5;plan.rr2=3;
+    const entry=last.c;
+    // STRUCTURE-AWARE STOP: place SL just beyond the most recent swing low/high
+    // (so normal market noise doesn't stop us out), with an ATR floor & cap.
+    const S=(typeof STRAT!=='undefined')?STRAT:STRAT_DEFAULTS;
+    const buf=0.25*a14;
+    let slDist;
+    if(action==='BUY'){
+      const swing=supBelow!=null?supBelow:lo;
+      slDist=Math.max(S.sl_atr_min*a14, Math.min(S.sl_atr_max*a14, (entry-swing)+buf));
+    }else{
+      const swing=resAbove!=null?resAbove:hi;
+      slDist=Math.max(S.sl_atr_min*a14, Math.min(S.sl_atr_max*a14, (swing-entry)+buf));
+    }
+    // ADAPTIVE REWARD: let winners run further when the market is trending,
+    // tighten the first target when it's ranging (bank quicker in chop).
+    const rr1 = regime==='TRENDING'?S.rr_trend : regime==='RANGING'?S.rr_range : S.rr_default;
+    const rr2 = regime==='TRENDING'?S.rr2_trend : S.rr2_default;
+    if(action==='BUY'){plan={entry,sl:entry-slDist,tp1:entry+slDist*rr1,tp2:entry+slDist*rr2};}
+    else{plan={entry,sl:entry+slDist,tp1:entry-slDist*rr1,tp2:entry-slDist*rr2};}
+    plan.risk=Math.abs(entry-plan.sl);plan.rr1=rr1;plan.rr2=rr2;
   }
   return {last:last.c,chg,ma9:ma9[i],ma21:ma21[i],md:m.md[i],sb:m.sb[i],sh:m.sh[i],
     rsi:r,zoneUp,macdUp,crossUp,crossDn,action,cls,aligned,conf,reasons,hi,lo,vol,atr:a14,plan,
@@ -1459,12 +1563,93 @@ async function discoverLessons(){
   renderBrain();
 }
 
+/* ============================================================
+   ★ ForexMind "Trend-Pullback v1" — my own strategy ★
+   --------------------------------------------------------------
+   PHILOSOPHY (why I believe this has an edge):
+   The 3-way core (Zero Lag + EMA9/21 + Impulse MACD) is a solid
+   momentum trigger, but momentum triggers fire constantly — including
+   in chop and against the bigger trend, which is where accounts die.
+   So this strategy treats the core as the *trigger*, then applies a
+   set of HARD GATES that VETO low-quality context, and only trades
+   in the direction of the higher-timeframe trend. Fewer trades,
+   each one with the wind at its back. Every gate is tunable below.
+   ============================================================ */
+const STRAT_DEFAULTS={
+  require_h4:true,      // only trade WITH the 4H trend (the big edge)
+  require_d1:false,     // also require Daily trend agreement (stricter, fewer trades)
+  require_supertrend:false, // SuperTrend must agree too
+  block_ranging:true,   // veto trades in ranging markets
+  block_chaotic:true,   // veto trades in chaotic/high-vol markets
+  block_lowatr:true,    // veto when momentum (ATR) is too weak
+  rsi_filter:true,      // veto chasing overbought/oversold extremes
+  rsi_ob:72, rsi_os:28, // overbought / oversold thresholds
+  session_filter:true,  // veto dead off-session hours
+  min_rr:1.5,           // skip if target isn't worth the risk
+  sl_atr_min:1.0, sl_atr_max:2.5, // stop distance bounds (× ATR)
+  rr_trend:2.0, rr_range:1.3, rr_default:1.6, // adaptive reward by regime
+  rr2_trend:3.5, rr2_default:2.5,
+  min_conf:80           // mirrors trade threshold; UI keeps in sync
+};
+function loadStrat(){
+  try{const s=JSON.parse(localStorage.getItem('fm_strat')||'null');return s?{...STRAT_DEFAULTS,...s}:{...STRAT_DEFAULTS};}
+  catch(e){return {...STRAT_DEFAULTS};}
+}
+let STRAT=loadStrat();
+
+/* strategyGate: returns {pass:true} or {pass:false, reason:'…'}
+   These are HARD vetoes — if any fail, NO trade is taken (signal suppressed). */
+function strategyGate(p,a){
+  if(!a.aligned)return {pass:false,reason:'core not aligned'};
+  const want=a.action==='BUY'?'bull':'bear';
+  // 1) Higher-timeframe trend filter — the heart of the strategy
+  if(STRAT.require_h4){
+    const h4=htfBias(p,TFS.find(t=>t.id==='4H'));
+    if(h4 && h4!=='mixed' && h4!==want) return {pass:false,reason:`against H4 trend (${h4})`};
+  }
+  if(STRAT.require_d1){
+    const d1=htfBias(p,TFS.find(t=>t.id==='1D'));
+    if(d1 && d1!=='mixed' && d1!==want) return {pass:false,reason:`against D1 trend (${d1})`};
+  }
+  // 2) SuperTrend confirmation (optional)
+  if(STRAT.require_supertrend && a.stUp!=null){
+    const stWant=a.action==='BUY'?a.stUp===true:a.stUp===false;
+    if(!stWant) return {pass:false,reason:'SuperTrend disagrees'};
+  }
+  // 3) Regime vetoes
+  if(STRAT.block_chaotic && a.regime==='CHAOTIC') return {pass:false,reason:'chaotic market'};
+  if(STRAT.block_ranging && a.regime==='RANGING') return {pass:false,reason:'ranging market'};
+  // 4) Weak-momentum veto
+  if(STRAT.block_lowatr && a.atrCat==='low') return {pass:false,reason:'ATR too low (no momentum)'};
+  // 5) RSI exhaustion veto — don't chase
+  if(STRAT.rsi_filter){
+    if(a.action==='BUY' && a.rsi>=STRAT.rsi_ob) return {pass:false,reason:`RSI overbought (${Math.round(a.rsi)})`};
+    if(a.action==='SELL' && a.rsi<=STRAT.rsi_os) return {pass:false,reason:`RSI oversold (${Math.round(a.rsi)})`};
+  }
+  // 6) Session-quality veto
+  if(STRAT.session_filter){
+    const si=activeSessionInfo();
+    if(si.open.length===0) return {pass:false,reason:'off-session (thin liquidity)'};
+  }
+  // 7) Risk:reward floor
+  if(a.plan){
+    const rr=Math.abs(a.plan.tp1-a.plan.entry)/Math.max(1e-9,Math.abs(a.plan.entry-a.plan.sl));
+    if(rr < STRAT.min_rr) return {pass:false,reason:`R:R ${rr.toFixed(2)} below min ${STRAT.min_rr}`};
+  }
+  return {pass:true,reason:'all gates passed'};
+}
+
 /* ----- enrichSignal: apply soft modifiers + build explanation -----
    Entry rule is unchanged (MACD+EMA align). HTF/volume/regime/structure/
    S/R and historical performance only ADJUST confidence (never block). */
 function enrichSignal(p,a){
   if(!a.aligned)return a;
+  // run my strategy's hard gates; if any fail, mark the signal as vetoed
+  const gate=strategyGate(p,a);
+  a.gate=gate;
+  if(!gate.pass){a.vetoed=true;a.vetoReason=gate.reason;}
   let conf=a.conf;const why=[];const want=a.action==='BUY'?'bull':'bear';
+  const si=activeSessionInfo();const sess=si.open[0]||'Off-session';
   // CORE: a signal only exists when Zero Lag + EMA 9/21 + Impulse MACD all agree
   why.push([true,`⚡ Zero Lag Trend ${a.zlUp?'bullish':'bearish'} (CORE)`+(a.zlFlip?' — fresh flip':'')]);
   why.push([true,`EMA 9 ${a.zoneUp?'above':'below'} EMA 21 (required, agrees)`]);
@@ -1473,36 +1658,46 @@ function enrichSignal(p,a){
   const stWant = a.action==='BUY'? a.stUp===true : a.stUp===false;
   if(a.stUp!=null){
     if(stWant){conf+=7;why.push([true,'SuperTrend confirms']);}
-    else{conf-=9;why.push([false,'SuperTrend disagrees']);}
+    else{conf-=11;why.push([false,'SuperTrend disagrees']);}
   }
   why.push([a.slopeStrength>0.3,`${a.slopeStrength>0.3?'Strong':'Weak'} EMA slope`]);
-  // higher timeframe confirmation (soft)
+  // ===== HIGHER-TIMEFRAME ALIGNMENT (trading WITH the bigger trend is the #1 edge) =====
+  // Agreement boosts; trading AGAINST H4/D1 is heavily penalised so it drops below threshold.
   const h4=htfBias(p,TFS.find(t=>t.id==='4H')), d1=htfBias(p,TFS.find(t=>t.id==='1D'));
-  if(h4===want){conf+=7;why.push([true,'H4 trend confirms']);}
-  else if(h4&&h4!=='mixed'){conf-=8;why.push([false,'H4 trend disagrees']);}
+  if(h4===want){conf+=8;why.push([true,'H4 trend confirms']);}
+  else if(h4&&h4!=='mixed'){conf-=16;why.push([false,'⛔ H4 trend disagrees (counter-trend)']);}
   else why.push([false,'H4 trend mixed/unknown']);
-  if(d1===want){conf+=5;why.push([true,'D1 trend confirms']);}
-  else if(d1&&d1!=='mixed'){conf-=4;why.push([false,'D1 trend disagrees']);}
+  if(d1===want){conf+=6;why.push([true,'D1 trend confirms']);}
+  else if(d1&&d1!=='mixed'){conf-=9;why.push([false,'⛔ D1 trend disagrees']);}
+  // both higher timeframes against us = almost certainly a losing counter-trend trade
+  if(h4&&h4!=='mixed'&&h4!==want && d1&&d1!=='mixed'&&d1!==want){conf-=8;why.push([false,'⛔ Both H4 & D1 against trade']);}
+  // ===== RSI exhaustion: don't chase an over-extended move =====
+  if(a.action==='BUY' && a.rsi>=72){conf-=12;why.push([false,'⛔ RSI overbought — chasing top']);}
+  else if(a.action==='SELL' && a.rsi<=28){conf-=12;why.push([false,'⛔ RSI oversold — chasing bottom']);}
+  else why.push([true,`RSI healthy (${Math.round(a.rsi)})`]);
+  // ===== Session quality: thin off-session liquidity = wide spreads & false moves =====
+  if(si.open.length>=2){conf+=4;why.push([true,'Session overlap (deep liquidity)']);}
+  else if(si.open.length===0){conf-=10;why.push([false,'⛔ Off-session (thin liquidity)']);}
+  else why.push([true,`${sess} session active`]);
   // volume
   if(a.volRatio>=1.3){conf+=4;why.push([true,'Above-average volume']);}
-  else if(a.volRatio<0.7){conf-=4;why.push([false,'Thin volume']);}
+  else if(a.volRatio<0.7){conf-=6;why.push([false,'Thin volume']);}
   else why.push([true,'Normal volume']);
-  // regime
-  if(a.regime==='TRENDING'){conf+=5;why.push([true,'Trending market']);}
-  else if(a.regime==='RANGING'){conf-=6;why.push([false,'Ranging market']);}
-  else if(a.regime==='CHAOTIC'){conf-=12;why.push([false,'Chaotic / high-volatility']);}
+  // regime — chop and chaos are the biggest account killers for a trend system
+  if(a.regime==='TRENDING'){conf+=6;why.push([true,'Trending market']);}
+  else if(a.regime==='RANGING'){conf-=12;why.push([false,'⛔ Ranging market (chop risk)']);}
+  else if(a.regime==='CHAOTIC'){conf-=22;why.push([false,'⛔ Chaotic / high-volatility (avoid)']);}
   // ATR filter
-  if(a.atrCat==='low'){conf-=6;why.push([false,'Low ATR (weak momentum)']);}
+  if(a.atrCat==='low'){conf-=8;why.push([false,'Low ATR (weak momentum)']);}
   else why.push([true,`Healthy ATR (${a.atrCat})`]);
   // market structure
   if(a.structAgree){conf+=5;why.push([true,`${a.action==='BUY'?'Bullish':'Bearish'} market structure`]);}
   else why.push([false,'Structure not confirmed']);
-  // support/resistance
-  if(a.srRisk){conf-=7;why.push([false,a.action==='BUY'?'Near resistance':'Near support']);}
+  // support/resistance — buying into resistance / selling into support is a classic loss
+  if(a.srRisk){conf-=11;why.push([false,a.action==='BUY'?'⛔ Buying into resistance':'⛔ Selling into support']);}
   else why.push([true,'Clear path to target']);
   // self-learning nudges
   if(LEARN.ready){
-    const si=activeSessionInfo();const sess=si.open[0]||'Off-session';
     conf+=learnAdj('pair',a._pair); conf+=learnAdj('tf',a._tf);
     conf+=learnAdj('session',sess); conf+=learnAdj('regime',a.regime);
     const adj=learnAdj('pair',a._pair);
@@ -1731,7 +1926,7 @@ function heikin(cs){
 /* ---------- Charts ---------- */
 let CHART_TYPE=localStorage.getItem('fm_ctype')||'candle';
 let GEO=null;
-let CHART_H=parseInt(localStorage.getItem('fm_charth')||'300',10);
+let CHART_H=parseInt(localStorage.getItem('fm_charth')||'420',10);
 const VIEW={count:60,offset:0};   // visible candle count + how far back from the right edge
 function drawChart(cs,a){
   const c=$('chart'),dpr=window.devicePixelRatio||1,W=c.clientWidth,H=CHART_H;
@@ -1776,10 +1971,10 @@ function drawChart(cs,a){
   const vs=Math.max(0,start),ve=Math.min(n,end);
   if(CHART_TYPE==='line'||CHART_TYPE==='area'){
     const closes=drawCs.map(k=>k.c);
-    if(CHART_TYPE==='area'){const g=x.createLinearGradient(0,pad.t,0,H-pad.b);g.addColorStop(0,'rgba(110,139,255,.38)');g.addColorStop(1,'rgba(110,139,255,0)');
+    if(CHART_TYPE==='area'){const g=x.createLinearGradient(0,pad.t,0,H-pad.b);g.addColorStop(0,'rgba(255,122,89,.38)');g.addColorStop(1,'rgba(255,122,89,0)');
       x.beginPath();x.moveTo(px(vs),py(closes[vs]));for(let i=vs+1;i<ve;i++)x.lineTo(px(i),py(closes[i]));x.lineTo(px(ve-1),H-pad.b);x.lineTo(px(vs),H-pad.b);x.closePath();x.fillStyle=g;x.fill();}
     x.beginPath();x.moveTo(px(vs),py(closes[vs]));for(let i=vs+1;i<ve;i++)x.lineTo(px(i),py(closes[i]));
-    x.strokeStyle='#6e8bff';x.lineWidth=2;x.stroke();
+    x.strokeStyle='#ff7a59';x.lineWidth=2;x.stroke();
   }else{
     for(let i=vs;i<ve;i++){const k=drawCs[i];const up=k.c>=k.o,col=up?'#34e3a4':'#ff5f7a';x.strokeStyle=col;x.fillStyle=col;x.lineWidth=1;x.beginPath();x.moveTo(px(i),py(k.h));x.lineTo(px(i),py(k.l));x.stroke();const yo=py(k.o),yc=py(k.c),bt=Math.min(yo,yc),bh=Math.max(1,Math.abs(yc-yo));x.fillRect(px(i)-cw/2,bt,cw,bh);}
   }
@@ -1814,9 +2009,9 @@ function drawMACD(cs,a){
   x.strokeStyle='rgba(120,140,180,.16)';x.lineWidth=1;x.beginPath();x.moveTo(pad.l,py(0));x.lineTo(W-pad.r,py(0));x.stroke();
   for(let i=0;i<n;i++){if(sh[i]==null)continue;x.fillStyle=sh[i]>=0?'rgba(46,230,160,.6)':'rgba(255,90,114,.6)';const y0=py(0),y1=py(sh[i]);x.fillRect(px(i)-cw/2,Math.min(y0,y1),cw,Math.abs(y1-y0)||1);}
   const line=(arr,color)=>{x.beginPath();let f=true;for(let i=0;i<n;i++){if(arr[i]==null)continue;const X=px(i),Y=py(arr[i]);f?(x.moveTo(X,Y),f=false):x.lineTo(X,Y);}x.strokeStyle=color;x.lineWidth=1.6;x.stroke();};
-  line(md,'#5b8cff');line(sb,'#ffb43b');
+  line(md,'#ff5d9e');line(sb,'#ffc14d');
   const i=n-1,tag=(v,color)=>{const y=py(v);x.fillStyle=color;x.fillRect(W-pad.r,y-8,pad.r,16);x.fillStyle='#06101f';x.font='bold 9px Inter';x.fillText((+v).toFixed(3),W-pad.r+3,y+3);};
-  if(md[i]!=null)tag(md[i],'#5b8cff');if(sb[i]!=null)tag(sb[i],'#ffb43b');
+  if(md[i]!=null)tag(md[i],'#ff5d9e');if(sb[i]!=null)tag(sb[i],'#ffc14d');
 }
 function drawVolume(cs){
   const c=$('vol'),dpr=window.devicePixelRatio||1,W=c.clientWidth,H=64;
@@ -2057,7 +2252,7 @@ async function renderWatchlist(){
       <div class="pair-sub ${sc}">${a.action}${a.aligned?' ⚡':''}</div></div>
       <div class="pair-px"><div class="v">${fmt(a.last,p)}</div>
       <div class="chg ${a.chg>=0?'up':'down'}">${a.chg>=0?'+':''}${a.chg.toFixed(2)}%</div></div>`;
-    row.onclick=()=>{document.querySelectorAll('.pair-row').forEach(r=>r.classList.remove('active'));row.classList.add('active');loadPair(p);if(window.innerWidth<=1100)switchTab('chart');};
+    row.onclick=()=>{document.querySelectorAll('.pair-row').forEach(r=>r.classList.remove('active'));row.classList.add('active');loadPair(p);switchTab('chart');};
     el.appendChild(row);
   }
 }
@@ -2136,23 +2331,28 @@ async function generateBrief(target,doSpeak){
   return text;
 }
 function localBrief(snap,cal){
-  const g=snap['XAU/USD']||{};
-  const aligned=Object.entries(snap).filter(([,v])=>v.signal!=='HOLD');
+  const entries=Object.entries(snap);
+  const aligned=entries.filter(([,v])=>v.signal!=='HOLD');
   const buys=aligned.filter(([,v])=>v.signal==='BUY').map(([k])=>k);
   const sells=aligned.filter(([,v])=>v.signal==='SELL').map(([k])=>k);
+  // pick the strongest aligned setups across the WHOLE watchlist (by confidence), not just gold
+  const top=[...aligned].sort((a,b)=>(b[1].confidence||0)-(a[1].confidence||0)).slice(0,4);
   const evLines=cal.length?cal.map(e=>{const tm=e.time?new Date(e.time):null;const t=tm?String(tm.getHours()).padStart(2,'0')+':'+String(tm.getMinutes()).padStart(2,'0'):'';return `• ${t} ${e.title}${e.forecast?` (forecast ${e.forecast})`:''}`;}).join('\n'):'• No high-impact USD events flagged today (or calendar offline). Stay alert for headlines.';
   const si=activeSessionInfo();
   const sessLine=si.open.length?`**${si.open.join(' + ')}** open${si.killzone?`, **${si.killzone} killzone** 🎯`:''}${si.overlap==='London-NewYork'?' — London×NY overlap, peak liquidity.':''}`:'Between sessions — liquidity is thin.';
+  const setupLines=top.length?top.map(([k,v])=>{
+    return `• **${k}** (${v.timeframe||tf.label}): **${v.signal}** ${v.confidence?`(${v.confidence}%)`:''} — zone ${v.zone==='green'?'🟢 bullish':v.zone==='red'?'🔴 bearish':'forming'}, MACD ${v.histogram>=0?'rising':'falling'}${v.plan?` · entry ${v.plan.entry}, SL ${v.plan.stop}, TP ${v.plan.tp1}`:''}.`;
+  }).join('\n'):'• No clean aligned setups across the watchlist yet — patience pays.';
   return `**Market Mood**
 ${sessLine}
-Risk tone is read from your Zone + Impulse strategy across ${Object.keys(snap).length} symbols. ${aligned.length?`${aligned.length} symbol(s) show an aligned setup right now.`:'No symbols show a clean aligned setup yet — patience.'}
+Scanning your Zero Lag + EMA + Impulse strategy across ${entries.length} instruments (forex majors & gold). ${aligned.length?`${aligned.length} show an aligned setup right now — ${buys.length} bullish, ${sells.length} bearish.`:'No symbols show a clean aligned setup yet — patience.'}
 
-**Gold (XAU/USD) focus**
-Price ${g.price??'—'} on ${g.timeframe||tf.label}. Zone is ${g.zone||'—'} (${g.zone==='green'?'MA9 above MA21, bullish':g.zone==='red'?'MA9 below MA21, bearish':'forming'}); Impulse MACD ${g.impulseMACD??'—'} vs signal ${g.signalLine??'—'} → ${g.histogram>=0?'rising':'falling'} momentum. Strategy bias: **${g.signal||'HOLD'}**${g.plan?` — entry ${g.plan.entry}, stop ${g.plan.stop}, targets ${g.plan.tp1}/${g.plan.tp2}.`:' — wait for alignment.'}
+**Top Setups**
+${setupLines}
 
 **Watch today**
 ${evLines}
-High-impact USD data (CPI, NFP, FOMC, retail sales) can spike gold and the dollar — avoid entering right before a release.
+High-impact USD data (CPI, NFP, FOMC, retail sales) can swing the dollar, the majors and gold alike — avoid entering right before a release.
 
 **Game plan**
 • Longs: look for the **green zone + MACD above signal** (currently: ${buys.length?buys.join(', '):'none'}).
@@ -2281,9 +2481,13 @@ $('tfBar').onclick=e=>{if(e.target.tagName!=='BUTTON')return;tf=TFS.find(t=>t.id
 function switchTab(tab){
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('active',s.dataset.sec===tab));
-  // scroll back to top when switching tabs on mobile
-  if(window.innerWidth<=1100)window.scrollTo({top:0,behavior:'smooth'});
-  if(tab==='chart'){const cs=cache[key(current)+'_'+tf.id];if(cs){const a=analyze(cs);drawChart(cs,a);drawVolume(cs);drawMACD(cs,a);redrawOverlay&&redrawOverlay();}}
+  // center the column when a tab has only one card (avoids an over-wide lonely card / black gaps).
+  // chart keeps its own full-width hero layout, so exclude it.
+  const visible=document.querySelectorAll('.sec.active').length;
+  document.querySelector('.wrap').classList.toggle('solo', tab!=='chart' && visible<=1);
+  window.scrollTo({top:0,behavior:'smooth'});
+  // chart canvases must be redrawn whenever the chart tab becomes visible
+  if(tab==='chart')setTimeout(()=>{const cs=cache[key(current)+'_'+tf.id];if(cs){const a=analyze(cs);drawChart(cs,a);drawVolume(cs);drawMACD(cs,a);redrawOverlay&&redrawOverlay();}},40);
 }
 $('tabbar').onclick=e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.tab);};
 
@@ -2434,14 +2638,18 @@ $('chart').parentElement.addEventListener('touchend',()=>pinchDist=null);
 $('zoomIn').onclick=()=>zoomChart(0.8);
 $('zoomOut').onclick=()=>zoomChart(1.25);
 $('zoomReset').onclick=()=>{VIEW.count=60;VIEW.offset=0;redraw();};
-// chart height resize handle
+// chart height resize handle (TradingView-style: drag the bar up/down)
 let resizeStart=null;
-$('chartResize').addEventListener('mousedown',e=>{e.preventDefault();resizeStart={y:e.clientY,h:CHART_H};});
-$('chartResize').addEventListener('touchstart',e=>{resizeStart={y:e.touches[0].clientY,h:CHART_H};},{passive:true});
-window.addEventListener('mousemove',e=>{if(!resizeStart)return;CHART_H=Math.max(200,Math.min(640,resizeStart.h+(e.clientY-resizeStart.y)));redraw();});
-window.addEventListener('touchmove',e=>{if(!resizeStart)return;CHART_H=Math.max(200,Math.min(640,resizeStart.h+(e.touches[0].clientY-resizeStart.y)));redraw();},{passive:true});
-window.addEventListener('mouseup',()=>{if(resizeStart){localStorage.setItem('fm_charth',CHART_H);resizeStart=null;}});
-window.addEventListener('touchend',()=>{if(resizeStart){localStorage.setItem('fm_charth',CHART_H);resizeStart=null;}});
+const CH_MIN=160, CH_MAX=900;
+$('chartResize').addEventListener('mousedown',e=>{e.preventDefault();resizeStart={y:e.clientY,h:CHART_H};$('chartResize').classList.add('dragging');document.body.style.cursor='ns-resize';});
+$('chartResize').addEventListener('touchstart',e=>{resizeStart={y:e.touches[0].clientY,h:CHART_H};$('chartResize').classList.add('dragging');},{passive:true});
+window.addEventListener('mousemove',e=>{if(!resizeStart)return;CHART_H=Math.max(CH_MIN,Math.min(CH_MAX,resizeStart.h+(e.clientY-resizeStart.y)));redraw();});
+window.addEventListener('touchmove',e=>{if(!resizeStart)return;CHART_H=Math.max(CH_MIN,Math.min(CH_MAX,resizeStart.h+(e.touches[0].clientY-resizeStart.y)));redraw();},{passive:true});
+function endResize(){if(resizeStart){localStorage.setItem('fm_charth',CHART_H);resizeStart=null;$('chartResize').classList.remove('dragging');document.body.style.cursor='';}}
+window.addEventListener('mouseup',endResize);
+window.addEventListener('touchend',endResize);
+// double-click the bar to reset to a comfortable default height
+$('chartResize').addEventListener('dblclick',()=>{CHART_H=420;localStorage.setItem('fm_charth',CHART_H);redraw();});
 
 /* ---------- Chart expand / fullscreen ---------- */
 function redraw(){const cs=cache[key(current)+'_'+tf.id];if(cs){const a=analyze(cs);drawChart(cs,a);drawVolume(cs);drawMACD(cs,a);redrawOverlay();}}
@@ -2782,6 +2990,60 @@ async function renderMT5Account(){
 }
 setInterval(renderMT5Account, 15000);
 
+/* ----- Trading Settings (saved to Firestore -> bridge reads them) ----- */
+const SETTINGS_DEFAULTS={auto_trade:true,trade_gold:false,gold_only_5m:true,min_confidence:80,risk_percent:2,daily_loss_limit_pct:6,max_open_positions:3,max_trades_per_day:10};
+async function loadSettingsUI(){
+  let s=SETTINGS_DEFAULTS;
+  if(window.FB&&window.FB.ok){try{const d=await window.FB.getDoc('settings','trading');if(d)s={...SETTINGS_DEFAULTS,...d};}catch(e){}}
+  const set=(id,v)=>{const el=$(id);if(el){if(el.type==='checkbox')el.checked=!!v;else el.value=String(v);}};
+  set('setAuto',s.auto_trade);set('setGold',s.trade_gold);set('setGold5m',s.gold_only_5m);
+  set('setConf',s.min_confidence);set('setRisk',s.risk_percent);set('setDLL',s.daily_loss_limit_pct);
+  set('setMaxPos',s.max_open_positions);set('setMaxDay',s.max_trades_per_day);
+  // keep the app's own email threshold in sync with the trade confidence
+  CONF_THRESHOLD=parseInt(s.min_confidence,10)||80;
+}
+$('setSave')?.addEventListener('click',async()=>{
+  const obj={
+    auto_trade:$('setAuto').checked, trade_gold:$('setGold').checked, gold_only_5m:$('setGold5m').checked,
+    min_confidence:parseInt($('setConf').value,10), risk_percent:parseFloat($('setRisk').value),
+    daily_loss_limit_pct:parseFloat($('setDLL').value), max_open_positions:parseInt($('setMaxPos').value,10),
+    max_trades_per_day:parseInt($('setMaxDay').value,10), updatedAt:Date.now()
+  };
+  CONF_THRESHOLD=obj.min_confidence;
+  if(window.FB&&window.FB.ok){try{await window.FB.setDoc('settings','trading',obj);}catch(e){}}
+  const tag=$('setSaved');if(tag){tag.textContent='✓ saved';setTimeout(()=>tag.textContent='',2500);}
+  toast('⚙️ Settings saved','The MT5 bridge will apply them within ~30s','');
+});
+
+/* ----- Strategy panel (my Trend-Pullback v1 — tunable gates) ----- */
+function loadStrategyUI(){
+  const s=STRAT;
+  const set=(id,v)=>{const el=$(id);if(el){if(el.type==='checkbox')el.checked=!!v;else el.value=String(v);}};
+  set('stH4',s.require_h4);set('stD1',s.require_d1);set('stST',s.require_supertrend);
+  set('stRange',s.block_ranging);set('stChaos',s.block_chaotic);set('stLowAtr',s.block_lowatr);set('stSess',s.session_filter);
+  set('stRsi',s.rsi_filter);set('stRsiOb',s.rsi_ob);set('stRsiOs',s.rsi_os);
+  set('stMinRR',s.min_rr);set('stSlMin',s.sl_atr_min);set('stSlMax',s.sl_atr_max);
+  set('stRrTrend',s.rr_trend);set('stRrRange',s.rr_range);
+}
+$('stratSave')?.addEventListener('click',()=>{
+  STRAT={...STRAT,
+    require_h4:$('stH4').checked, require_d1:$('stD1').checked, require_supertrend:$('stST').checked,
+    block_ranging:$('stRange').checked, block_chaotic:$('stChaos').checked, block_lowatr:$('stLowAtr').checked,
+    session_filter:$('stSess').checked, rsi_filter:$('stRsi').checked,
+    rsi_ob:parseInt($('stRsiOb').value,10), rsi_os:parseInt($('stRsiOs').value,10),
+    min_rr:parseFloat($('stMinRR').value), sl_atr_min:parseFloat($('stSlMin').value), sl_atr_max:parseFloat($('stSlMax').value),
+    rr_trend:parseFloat($('stRrTrend').value), rr_range:parseFloat($('stRrRange').value)
+  };
+  localStorage.setItem('fm_strat',JSON.stringify(STRAT));
+  const tag=$('stratSaved');if(tag){tag.textContent='✓ saved';setTimeout(()=>tag.textContent='',2500);}
+  toast('🧠 Strategy updated','New filters apply on the next scan','');
+  refreshSignalUI&&refreshSignalUI();
+});
+$('stratReset')?.addEventListener('click',()=>{
+  STRAT={...STRAT_DEFAULTS};localStorage.setItem('fm_strat',JSON.stringify(STRAT));loadStrategyUI();
+  toast('🧠 Strategy reset','Back to recommended defaults','');
+});
+
 function renderAnalytics(){
   const el=$('analytics');if(!el)return;
   const S=computeStats();
@@ -2952,7 +3214,13 @@ async function scanAllPairs(){
       a._pair=sym(p);a._tf=SCAN_TF.label;
       try{await getCandles(p,TFS.find(t=>t.id==='4H'));await getCandles(p,TFS.find(t=>t.id==='1D'));}catch(e){}
       enrichSignal(p,a);
-      // NEW buy/sell signal on this pair
+      if(a.vetoed){
+        // Strategy gate blocked this trade — surface it but DON'T log/trade it.
+        pushAlert('info',`Skipped ${a.action} ${sym(p)} ${SCAN_TF.label}`,`Strategy filter: ${a.vetoReason}`,'hold');
+        if(key(p)===key(current)) toast(`🛡️ Skipped ${a.action} — ${sym(p)}`,`Filter: ${a.vetoReason}`,'');
+        continue;
+      }
+      // NEW buy/sell signal on this pair — passed all strategy gates
       logSignalFor(p,a,SCAN_TF);
       pushAlert('signal',`${a.action} ${sym(p)} ${SCAN_TF.label}`,
         a.plan?`${a.conf}% · Entry ${fmt(a.plan.entry,p)} · SL ${fmt(a.plan.sl,p)} · TP1 ${fmt(a.plan.tp1,p)}`:`${a.conf}%`,a.cls);
@@ -3015,7 +3283,7 @@ setInterval(async()=>{
 }, 60*1000);
 
 /* ---------- Init ---------- */
-const APP_VERSION='v10-mt5';   // bump this each deploy to confirm what's live
+const APP_VERSION='v15-mt5';   // bump this each deploy to confirm what's live
 (async function(){
   const vt=$('verTag');if(vt)vt.textContent=APP_VERSION;
   updateVoiceBtn();
@@ -3030,7 +3298,7 @@ const APP_VERSION='v10-mt5';   // bump this each deploy to confirm what's live
   await renderWatchlist();
   await loadCalendar();
   // Firestore-backed data (waits for FB module; falls back to local if offline)
-  const initFB=async()=>{ await loadKnowledge(); await loadSignals(); await loadAlerts(); await loadJournal(); await trackOutcomes(); renderMT5Account(); };
+  const initFB=async()=>{ loadStrategyUI(); await loadSettingsUI(); await loadKnowledge(); await loadSignals(); await loadAlerts(); await loadJournal(); await trackOutcomes(); renderMT5Account(); };
   if(window.FB){ initFB(); } else { window.addEventListener('fb-ready',initFB,{once:true}); setTimeout(initFB,2500); }
   $('briefModal').classList.add('show');
   // generate + speak the briefing on open (voice needs a user gesture in some browsers;
